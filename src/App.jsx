@@ -55,6 +55,7 @@ function Customer() {
   const [searchTerm, setSearchTerm] = useState("");
   const [category, setCategory] = useState("All");
   const [orderHistory, setOrderHistory] = useState([]);
+  const [tableNumber, setTableNumber] = useState("");
 
   useEffect(() => {
     loadMenu();
@@ -218,6 +219,11 @@ function Customer() {
   }
 
   async function placeOrder() {
+     if (!tableNumber) {
+    setMessage("Please select your table number.");
+    return;
+  }
+    // existing order code...
     if (cart.length === 0) {
       setMessage("Please add something to your order.");
       return;
@@ -235,7 +241,8 @@ function Customer() {
           status: "pending",
           total_amount: total,
           waiting_time: waitingTime,
-          payment_status: "unpaid"
+          payment_status: "unpaid",
+          table_number: Number(tableNumber)
         })
         .select()
         .single();
@@ -352,6 +359,33 @@ const drinks = filteredMenu.filter(
           {message}
         </div>
       )}
+      
+      <div className="table-selector">
+  <label htmlFor="tableNumber">
+    Table Number
+  </label>
+
+  <select
+    id="tableNumber"
+    value={tableNumber}
+    onChange={(event) =>
+      setTableNumber(event.target.value)
+    }
+  >
+    <option value="">
+      Select your table
+    </option>
+
+    {Array.from({ length: 20 }, (_, index) => (
+      <option
+        key={index + 1}
+        value={index + 1}
+      >
+        Table {index + 1}
+      </option>
+    ))}
+  </select>
+</div>
 
       <div className="menu-controls">
         <input
@@ -498,7 +532,8 @@ function MenuSection({
   title,
   items,
   addToCart
-}) {
+})  
+{
   return (
     <div className="menu-section">
 
@@ -788,6 +823,11 @@ function CustomerOrder({
           <h2>
             Order #{order.id}
           </h2>
+          {order.table_number && (
+            <p className="table-badge">
+              Table {order.table_number}
+            </p>
+)}
 
           <p>
             Your order has been sent to the
@@ -1286,6 +1326,11 @@ function Waiter() {
                   <h3>
                     #{order.id}
                   </h3>
+                  {order.table_number && (
+                    <p className="order-table">
+                      Table {order.table_number}
+                    </p>
+)}
                 </div>
 
                 <span
