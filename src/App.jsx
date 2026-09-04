@@ -54,11 +54,36 @@ function Customer() {
   const [message, setMessage] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [category, setCategory] = useState("All");
+  const [orderHistory, setOrderHistory] = useState([]);
 
   useEffect(() => {
     loadMenu();
     loadExistingOrder();
+    loadOrderHistory();
   }, []);
+
+  async function loadOrderHistory() {
+  const { data, error } = await supabase
+    .from("orders")
+    .select(`
+      *,
+      order_items (
+        quantity,
+        price,
+        menu_items (
+          name
+        )
+      )
+    `)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  setOrderHistory(data || []);
+}
 
   async function loadMenu() {
     const { data, error } = await supabase
@@ -337,6 +362,83 @@ const drinks = filteredMenu.filter(
             setSearchTerm(event.target.value)
     }
   />
+
+      <section className="order-history">
+  <div className="section-heading">
+    <h2>Order History</h2>
+    <p>Your previous Chowly orders</p>
+  </div>
+
+  {orderHistory.length === 0 ? (
+    <div className="empty-history">
+      <p>No previous orders yet.</p>
+    </div>
+  ) : (
+    <div className="history-list">
+      {orderHistory.map((historyOrder) => (
+        <div
+          className="history-card"
+          key={historyOrder.id}
+        >
+          <div className="history-card-top">
+            <div>
+              <h3>Order #{historyOrder.id}</h3>
+
+              <p>
+                {new Date(
+                  historyOrder.created_at
+                ).toLocaleString()}
+              </p>
+            </div>
+
+            <span className={`history-status ${historyOrder.status}`}>
+              {historyOrder.status}
+            </span>
+          </div>
+
+          <div className="history-items">
+            {historyOrder.order_items?.map((item) => (
+              <div
+                className="history-item"
+                key={item.menu_items?.name}
+              >
+                <span>
+                  {item.quantity} × {item.menu_items?.name}
+                </span>
+
+                <span>
+                  ₦{(
+                    Number(item.price) *
+                    Number(item.quantity)
+                  ).toLocaleString()}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          <div className="history-total">
+            <strong>Total</strong>
+
+            <strong>
+              ₦{Number(
+                historyOrder.total_amount
+              ).toLocaleString()}
+            </strong>
+          </div>
+
+          <div className="history-payment">
+            Payment:{" "}
+            <strong>
+              {historyOrder.payment_status === "paid"
+                ? "Paid"
+                : "Unpaid"}
+            </strong>
+          </div>
+        </div>
+      ))}
+    </div>
+  )}
+</section>
 
       <div className="category-buttons">
         {["All", "Food", "Drink"].map((itemCategory) => (
