@@ -328,6 +328,31 @@ const drinks = filteredMenu.filter(
         </div>
       )}
 
+      <div className="menu-controls">
+        <input
+          type="text"
+          placeholder="Search menu..."
+          value={searchTerm}
+          onChange={(event) =>
+            setSearchTerm(event.target.value)
+    }
+  />
+
+      <div className="category-buttons">
+        {["All", "Food", "Drink"].map((itemCategory) => (
+          <button
+            key={itemCategory}
+            className={
+              category === itemCategory ? "active" : ""
+            }
+            onClick={() => setCategory(itemCategory)}
+      >
+            {itemCategory}
+          </button>
+    ))}
+  </div>
+</div>
+
       <div className="content-grid">
 
         <div>
