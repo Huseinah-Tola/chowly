@@ -52,6 +52,8 @@ function Customer() {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [category, setCategory] = useState("All");
 
   useEffect(() => {
     loadMenu();
@@ -278,13 +280,25 @@ function Customer() {
     );
   }
 
-  const food = menu.filter(
-    (item) => item.category === "Food"
-  );
+  const filteredMenu = menu.filter((item) => {
+  const matchesSearch = item.name
+    .toLowerCase()
+    .includes(searchTerm.toLowerCase());
 
-  const drinks = menu.filter(
-    (item) => item.category === "Drink"
-  );
+  const matchesCategory =
+    category === "All" ||
+    item.category === category;
+
+  return matchesSearch && matchesCategory;
+});
+
+const food = filteredMenu.filter(
+  (item) => item.category === "Food"
+);
+
+const drinks = filteredMenu.filter(
+  (item) => item.category === "Drink"
+);
 
   return (
     <section className="section">
