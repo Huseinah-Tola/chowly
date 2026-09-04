@@ -1066,43 +1066,44 @@ function Waiter() {
     );
   }
 
-  async function updateOrder() {
-    if (!selectedOrder) {
-      return;
-    }
-
-    if (!chefId || !bartenderId) {
-      setMessage(
-        "Please select both a chef and bartender."
-      );
-      return;
-    }
-
-    const { error } = await supabase
-      .from("orders")
-      .update({
-        chef_id: Number(chefId),
-        bartender_id: Number(bartenderId),
-        status: "served"
-      })
-      .eq("id", selectedOrder.id);
-
-    if (error) {
-      console.error(error);
-      setMessage(
-        "Could not update the order."
-      );
-      return;
-    }
-
-    setMessage(
-      `Order #${selectedOrder.id} has been marked as served.`
-    );
-
-    setSelectedOrder(null);
-
-    await loadData();
+  async function updateOrderStatus(newStatus) {
+  if (!selectedOrder) {
+    return;
   }
+
+  const updates = {
+    status: newStatus
+  };
+
+  // Chef and bartender are required before serving
+  if (newStatus === "served") {
+    if (!chefId || !bartenderId) {
+      setMessage("Please assign both a chef and bartender.");
+      return;
+    }
+
+    updates.chef_id = Number(chefId);
+    updates.bartender_id = Number(bartenderId);
+  }
+
+  const { error } = await supabase
+    .from("orders")
+    .update(updates)
+    .eq("id", selectedOrder.id);
+
+  if (error) {
+    console.error(error);
+    setMessage("Could not update the order.");
+    return;
+  }
+
+  setMessage(
+    `Order #${selectedOrder.id} is now ${newStatus}.`
+  );
+
+  setSelectedOrder(null);
+  await loadData();
+}
 
   const chefs = staff.filter(
     (person) => person.role === "Chef"
@@ -1355,12 +1356,23 @@ function Waiter() {
             </div>
 
 
-            <button
-              className="primary-button full"
-              onClick={updateOrder}
-            >
-              Assign Staff & Mark Served
-            </button>
+            {selectedOrder.status === "pending" && (
+  <button
+    className="primary-button"
+    onClick={() => updateOrderStatus("preparing")}
+  >
+    Start Preparing
+  </button>
+)}
+
+{selectedOrder.status === "preparing" && (
+  <button
+    className="primary-button"
+    onClick={() => updateOrderStatus("served")}
+  >
+    Mark Order as Served
+  </button>
+)}
 
           </div>
 
