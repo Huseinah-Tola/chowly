@@ -243,7 +243,7 @@ function Customer() {
   }
 
   async function placeOrder() {
-    if (!tableNumber) {
+    if (tableNumber === "") {
     setShowTablePopup(true);
       return;
     }
