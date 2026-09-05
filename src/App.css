@@ -135,6 +135,7 @@ main{min-height:calc(100vh - 76px)}
 .menu-price{font-size:15px;color:#2b1b12;white-space:nowrap}
 .add-button{border:0;background:var(--gold);color:#251708;border-radius:7px;padding:7px 12px;font-size:11px;font-weight:800}
 .add-button:hover{background:var(--gold-light)}
+.waiter-open-button{width:100%;padding:10px 14px;border-radius:8px;font-size:12px;letter-spacing:.1px}
 .empty-menu{padding:30px;text-align:center;border:1px dashed var(--line);border-radius:12px;color:var(--muted);background:#fff}
 
 /* ================= SIDEBAR ================= */

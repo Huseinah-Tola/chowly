@@ -20,6 +20,18 @@ import sevenUpImage from "./assets/menu/seven-up.svg";
 import chapmanImage from "./assets/menu/chapman.svg";
 import milkshakeImage from "./assets/menu/milkshake.svg";
 
+// Premium external product photography for the three branded soft drinks.
+// Local SVG assets remain as fallbacks if an external image ever fails.
+const PREMIUM_DRINK_IMAGES = {
+  coke: "https://images.unsplash.com/photo-1629019416996-712aa1bd87f4?fm=jpg&ixlib=rb-4.1.0&q=85&w=1200",
+  fanta: "https://outofhome.se/media/catalog/product/cache/30/image/17f82f742ffe127f42dca9de82fb58b1/6/0/60432_fanta_sleek.jpg",
+  sprite: "https://mir-s3-cdn-cf.behance.net/project_modules/1400_webp/eec883193413997.65eb2186142c5.jpg",
+};
+
+// Premium chicken shawarma photography so it never falls back to the Jollof Rice image.
+const CHICKEN_SHAWARMA_IMAGE =
+  "https://images.pexels.com/photos/29306505/pexels-photo-29306505.jpeg?cs=srgb&dl=pexels-nano-erdozain-120534369-29306505.jpg&fm=jpg";
+
 function App() {
   const [mode, setMode] = useState("customer");
 
@@ -533,7 +545,8 @@ const MENU_IMAGES = {
   pasta: pastaAlfredoImage,
   burger: beefBurgerImage,
   pizza: pizzaImage,
-  coke: cokeImage,
+  coke: PREMIUM_DRINK_IMAGES.coke,
+  chickenShawarma: CHICKEN_SHAWARMA_IMAGE,
   orangeJuice: orangeJuiceImage,
   smoothie: strawberrySmoothieImage,
   water: waterImage,
@@ -543,8 +556,8 @@ const MENU_IMAGES = {
 // Exact drink images for common restaurant drinks. These are only used when the
 // database item name clearly matches the drink; otherwise we use the local assets.
 const DRINK_IMAGES = {
-  sprite: spriteImage,
-  fanta: fantaImage,
+  sprite: PREMIUM_DRINK_IMAGES.sprite,
+  fanta: PREMIUM_DRINK_IMAGES.fanta,
   sevenUp: sevenUpImage,
   chapman: chapmanImage,
   milkshake: milkshakeImage
@@ -557,6 +570,7 @@ function getMenuImage(item) {
   if (name.includes("jollof")) return MENU_IMAGES.jollof;
   if (name.includes("fried rice")) return MENU_IMAGES.friedRice;
   if (name.includes("grilled chicken")) return MENU_IMAGES.grilledChicken;
+  if (name.includes("shawarma")) return MENU_IMAGES.chickenShawarma;
   if (name.includes("alfredo")) return MENU_IMAGES.pasta;
   if (name.includes("pasta")) return MENU_IMAGES.pasta;
   if (name.includes("spaghetti")) return MENU_IMAGES.pasta;
@@ -579,7 +593,18 @@ function getMenuImage(item) {
 }
 
 function categoryFallbackImage(item) {
+  const name = String(item?.name || "").toLowerCase().trim();
   const category = String(item?.category || "").toLowerCase();
+
+  // Keep the correct local image as a safety net if an external premium image is unavailable.
+  if (name.includes("coke") || name.includes("coca")) return cokeImage;
+  if (name.includes("sprite")) return spriteImage;
+  if (name.includes("fanta")) return fantaImage;
+  if (name.includes("shawarma")) return MENU_IMAGES.chickenShawarma;
+  if (name.includes("7up") || name.includes("7 up") || name.includes("seven up")) return sevenUpImage;
+  if (name.includes("chapman")) return chapmanImage;
+  if (name.includes("milkshake") || name.includes("milk shake")) return milkshakeImage;
+
   return category === "drink" ? MENU_IMAGES.water : MENU_IMAGES.jollof;
 }
 
@@ -1449,7 +1474,7 @@ function Waiter() {
                 </strong>
 
                 <button
-                  className="secondary-button"
+                  className="add-button waiter-open-button"
                   onClick={() =>
                     openOrder(order)
                   }
