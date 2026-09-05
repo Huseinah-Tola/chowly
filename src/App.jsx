@@ -94,6 +94,7 @@ function Customer() {
   const [showAllFood, setShowAllFood] = useState(false);
   const [showAllDrinks, setShowAllDrinks] = useState(false);
   const [showAllHistory, setShowAllHistory] = useState(false);
+  const [showTablePopup, setShowTablePopup] = useState(false);
 
   useEffect(() => {
     loadMenu();
@@ -243,7 +244,7 @@ function Customer() {
 
   async function placeOrder() {
     if (!tableNumber) {
-      setMessage("Please select your table number.");
+    setShowTablePopup(true);
       return;
     }
 
@@ -501,6 +502,29 @@ function Customer() {
     </section>
   );
 }
+
+{showTablePopup && (
+  <div className="table-popup-overlay">
+    <div className="table-popup">
+      <div className="table-popup-icon">
+        🪑
+      </div>
+
+      <h2>Table Number Required</h2>
+
+      <p>
+        Please select your table number before placing your order.
+      </p>
+
+      <button
+        className="table-popup-button"
+        onClick={() => setShowTablePopup(false)}
+      >
+        Select Table
+      </button>
+    </div>
+  </div>
+)}
 
 
 /* =========================================

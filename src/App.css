@@ -337,3 +337,87 @@ main{min-height:calc(100vh - 76px)}
 }
 
 .payment-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:flex-end}.pretend-payment-button{min-width:150px;padding:11px 16px;font-size:11px}.pretend-payment-button:disabled{opacity:.65;cursor:not-allowed}
+
+/* =========================================
+   TABLE NUMBER REQUIRED POPUP
+   ========================================= */
+
+.table-popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(35, 20, 10, 0.62);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+  backdrop-filter: blur(4px);
+}
+
+.table-popup {
+  width: min(420px, 100%);
+  background: #fffaf2;
+  border: 1px solid #ead7b8;
+  border-radius: 20px;
+  padding: 32px;
+  text-align: center;
+  box-shadow: 0 24px 70px rgba(45, 25, 10, 0.28);
+  animation: tablePopupIn 0.2s ease-out;
+}
+
+.table-popup-icon {
+  width: 58px;
+  height: 58px;
+  margin: 0 auto 18px;
+  border-radius: 50%;
+  background: #f4dfb1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+}
+
+.table-popup h2 {
+  margin: 0 0 10px;
+  color: #321b0f;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.table-popup p {
+  margin: 0 auto 24px;
+  max-width: 320px;
+  color: #725f50;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.table-popup-button {
+  width: 100%;
+  border: none;
+  border-radius: 10px;
+  padding: 13px 20px;
+  background: #dca63b;
+  color: #261507;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.table-popup-button:hover {
+  background: #c99025;
+  transform: translateY(-1px);
+}
+
+@keyframes tablePopupIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
