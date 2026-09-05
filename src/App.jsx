@@ -360,163 +360,161 @@ const drinks = filteredMenu.filter(
         </div>
       )}
       
-      <div className="table-selector">
-  <label htmlFor="tableNumber">
-    Table Number
-  </label>
+      <div className="customer-layout">
+        <div className="menu-column">
+          <div className="table-selector">
+            <label htmlFor="tableNumber">Table Number</label>
 
-  <select
-    id="tableNumber"
-    value={tableNumber}
-    onChange={(event) =>
-      setTableNumber(event.target.value)
-    }
-  >
-    <option value="">
-      Select your table
-    </option>
+            <select
+              id="tableNumber"
+              value={tableNumber}
+              onChange={(event) =>
+                setTableNumber(event.target.value)
+              }
+            >
+              <option value="">Select your table</option>
 
-    {Array.from({ length: 20 }, (_, index) => (
-      <option
-        key={index + 1}
-        value={index + 1}
-      >
-        Table {index + 1}
-      </option>
-    ))}
-  </select>
-</div>
+              {Array.from({ length: 20 }, (_, index) => (
+                <option
+                  key={index + 1}
+                  value={index + 1}
+                >
+                  Table {index + 1}
+                </option>
+              ))}
+            </select>
+          </div>
 
-      <div className="menu-controls">
-        <input
-          type="text"
-          placeholder="Search menu..."
-          value={searchTerm}
-          onChange={(event) =>
-            setSearchTerm(event.target.value)
-    }
-  />
+          <div className="menu-controls">
+            <input
+              type="text"
+              placeholder="Search menu..."
+              value={searchTerm}
+              onChange={(event) =>
+                setSearchTerm(event.target.value)
+              }
+            />
 
-      <section className="order-history">
-  <div className="section-heading">
-    <h2>Order History</h2>
-    <p>Your previous Chowly orders</p>
-  </div>
+            <div className="category-buttons">
+              {["All", "Food", "Drink"].map((itemCategory) => (
+                <button
+                  key={itemCategory}
+                  className={
+                    category === itemCategory ? "active" : ""
+                  }
+                  onClick={() => setCategory(itemCategory)}
+                >
+                  {itemCategory === "Drink"
+                    ? "Drinks"
+                    : itemCategory}
+                </button>
+              ))}
+            </div>
+          </div>
 
-  {orderHistory.length === 0 ? (
-    <div className="empty-history">
-      <p>No previous orders yet.</p>
-    </div>
-  ) : (
-    <div className="history-list">
-      {orderHistory.map((historyOrder) => (
-        <div
-          className="history-card"
-          key={historyOrder.id}
-        >
-          <div className="history-card-top">
-            <div>
-              <h3>Order #{historyOrder.id}</h3>
+          <div className="menu-list">
+            <MenuSection
+              title="Food"
+              items={food}
+              addToCart={addToCart}
+            />
 
-              <p>
-                {new Date(
-                  historyOrder.created_at
-                ).toLocaleString()}
-              </p>
+            <MenuSection
+              title="Drinks"
+              items={drinks}
+              addToCart={addToCart}
+            />
+          </div>
+        </div>
+
+        <aside className="order-sidebar">
+          <section className="order-history">
+            <div className="section-heading">
+              <h2>Order History</h2>
+              <p>Your previous Chowly orders</p>
             </div>
 
-            <span className={`history-status ${historyOrder.status}`}>
-              {historyOrder.status}
-            </span>
-          </div>
-
-          <div className="history-items">
-            {historyOrder.order_items?.map((item) => (
-              <div
-                className="history-item"
-                key={item.menu_items?.name}
-              >
-                <span>
-                  {item.quantity} × {item.menu_items?.name}
-                </span>
-
-                <span>
-                  ₦{(
-                    Number(item.price) *
-                    Number(item.quantity)
-                  ).toLocaleString()}
-                </span>
+            {orderHistory.length === 0 ? (
+              <div className="empty-history">
+                <p>No previous orders yet.</p>
               </div>
-            ))}
-          </div>
+            ) : (
+              <div className="history-list">
+                {orderHistory.map((historyOrder) => (
+                  <div
+                    className="history-card"
+                    key={historyOrder.id}
+                  >
+                    <div className="history-card-top">
+                      <div>
+                        <h3>Order #{historyOrder.id}</h3>
+                        <p>
+                          {new Date(
+                            historyOrder.created_at
+                          ).toLocaleString()}
+                        </p>
+                      </div>
 
-          <div className="history-total">
-            <strong>Total</strong>
+                      <span
+                        className={`history-status ${historyOrder.status}`}
+                      >
+                        {historyOrder.status}
+                      </span>
+                    </div>
 
-            <strong>
-              ₦{Number(
-                historyOrder.total_amount
-              ).toLocaleString()}
-            </strong>
-          </div>
+                    <div className="history-items">
+                      {historyOrder.order_items?.map((item) => (
+                        <div
+                          className="history-item"
+                          key={`${historyOrder.id}-${item.id}`}
+                        >
+                          <span>
+                            {item.quantity} × {item.menu_items?.name}
+                          </span>
 
-          <div className="history-payment">
-            Payment:{" "}
-            <strong>
-              {historyOrder.payment_status === "paid"
-                ? "Paid"
-                : "Unpaid"}
-            </strong>
-          </div>
-        </div>
-      ))}
-    </div>
-  )}
-</section>
+                          <span>
+                            ₦{(
+                              Number(item.price) *
+                              Number(item.quantity)
+                            ).toLocaleString()}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
 
-      <div className="category-buttons">
-        {["All", "Food", "Drink"].map((itemCategory) => (
-          <button
-            key={itemCategory}
-            className={
-              category === itemCategory ? "active" : ""
-            }
-            onClick={() => setCategory(itemCategory)}
-      >
-            {itemCategory}
-          </button>
-    ))}
-  </div>
-</div>
+                    <div className="history-total">
+                      <strong>Total</strong>
+                      <strong>
+                        ₦{Number(
+                          historyOrder.total_amount
+                        ).toLocaleString()}
+                      </strong>
+                    </div>
 
-      <div className="content-grid">
+                    <div className="history-payment">
+                      Payment:{" "}
+                      <strong>
+                        {historyOrder.payment_status === "paid"
+                          ? "Paid"
+                          : "Unpaid"}
+                      </strong>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
 
-        <div>
-
-          <MenuSection
-            title="Food"
-            items={food}
-            addToCart={addToCart}
+          <Cart
+            cart={cart}
+            total={getTotal()}
+            waitingTime={getWaitingTime()}
+            increaseQuantity={increaseQuantity}
+            decreaseQuantity={decreaseQuantity}
+            removeFromCart={removeFromCart}
+            placeOrder={placeOrder}
           />
-
-          <MenuSection
-            title="Drinks"
-            items={drinks}
-            addToCart={addToCart}
-          />
-
-        </div>
-
-        <Cart
-          cart={cart}
-          total={getTotal()}
-          waitingTime={getWaitingTime()}
-          increaseQuantity={increaseQuantity}
-          decreaseQuantity={decreaseQuantity}
-          removeFromCart={removeFromCart}
-          placeOrder={placeOrder}
-        />
-
+        </aside>
       </div>
 
     </section>
