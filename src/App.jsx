@@ -380,7 +380,12 @@ function Customer() {
         <div className="menu-column">
           <div className="table-selector">
             <label htmlFor="tableNumber">Table Number</label>
-            <select id="tableNumber" value={tableNumber} onChange={(event) => setTableNumber(event.target.value)}>
+            <select id="tableNumber" value={tableNumber} onChange={(event) => {
+              setTableNumber(event.target.value);
+              if (event.target.value) {
+                setShowTablePopup(false);
+              }
+            }}>
               <option value="">Select your table</option>
               {Array.from({ length: 20 }, (_, index) => (
                 <option key={index + 1} value={index + 1}>Table {index + 1}</option>
@@ -499,32 +504,50 @@ function Customer() {
           />
         </aside>
       </div>
+       {showTablePopup && (
+        <div
+          className="table-popup-overlay"
+          onClick={() => setShowTablePopup(false)}
+        >
+          <div
+            className="table-popup"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="table-popup-icon">
+              🍽️
+            </div>
+
+            <h2>Table Number Required</h2>
+
+            <p>
+              Please select your table number before placing your order.
+            </p>
+
+            <button
+              className="table-popup-button"
+              type="button"
+              onClick={() => {
+                setShowTablePopup(false);
+
+                setTimeout(() => {
+                  document
+                    .getElementById("tableNumber")
+                    ?.scrollIntoView({
+                      behavior: "smooth",
+                      block: "center",
+                    });
+                }, 100);
+              }}
+            >
+              Select Table
+            </button>
+          </div>
+             </div>
+      )}
     </section>
   );
 }
-
-{showTablePopup && (
-  <div className="table-popup-overlay">
-    <div className="table-popup">
-      <div className="table-popup-icon">
-        🪑
-      </div>
-
-      <h2>Table Number Required</h2>
-
-      <p>
-        Please select your table number before placing your order.
-      </p>
-
-      <button
-        className="table-popup-button"
-        onClick={() => setShowTablePopup(false)}
-      >
-        Select Table
-      </button>
-    </div>
-  </div>
-)}
+    
 
 
 /* =========================================
