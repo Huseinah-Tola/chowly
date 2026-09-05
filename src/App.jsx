@@ -2,6 +2,24 @@ import { useEffect, useState } from "react";
 import { supabase } from "./lib/supabase";
 import "./App.css";
 
+import heroImage from "./assets/menu/hero.jpg";
+import jollofRiceImage from "./assets/menu/jollof-rice.jpg";
+import friedRiceImage from "./assets/menu/fried-rice.jpg";
+import grilledChickenImage from "./assets/menu/grilled-chicken.jpg";
+import pastaAlfredoImage from "./assets/menu/pasta-alfredo.jpg";
+import beefBurgerImage from "./assets/menu/beef-burger.jpg";
+import pizzaImage from "./assets/menu/pizza.jpg";
+import cokeImage from "./assets/menu/coke.jpg";
+import orangeJuiceImage from "./assets/menu/orange-juice.jpg";
+import strawberrySmoothieImage from "./assets/menu/strawberry-smoothie.jpg";
+import waterImage from "./assets/menu/water.jpg";
+import latteImage from "./assets/menu/latte.jpg";
+import spriteImage from "./assets/menu/sprite.svg";
+import fantaImage from "./assets/menu/fanta.svg";
+import sevenUpImage from "./assets/menu/seven-up.svg";
+import chapmanImage from "./assets/menu/chapman.svg";
+import milkshakeImage from "./assets/menu/milkshake.svg";
+
 function App() {
   const [mode, setMode] = useState("customer");
 
@@ -56,6 +74,9 @@ function Customer() {
   const [category, setCategory] = useState("All");
   const [orderHistory, setOrderHistory] = useState([]);
   const [tableNumber, setTableNumber] = useState("");
+  const [showAllFood, setShowAllFood] = useState(false);
+  const [showAllDrinks, setShowAllDrinks] = useState(false);
+  const [showAllHistory, setShowAllHistory] = useState(false);
 
   useEffect(() => {
     loadMenu();
@@ -134,6 +155,9 @@ function Customer() {
 
     if (!error && data) {
       setOrder(data);
+    } else if (error) {
+      localStorage.removeItem("chowlyOrderId");
+      setOrder(null);
     }
   }
 
@@ -269,9 +293,8 @@ function Customer() {
 
     if (itemsError) {
       console.error(itemsError);
-      setMessage(
-        "The order was created but its items could not be saved."
-      );
+      await supabase.from("orders").delete().eq("id", newOrder.id);
+      setMessage("The order could not be completed. Please try again.");
       return;
     }
 
@@ -335,7 +358,7 @@ const drinks = filteredMenu.filter(
   return (
     <section className="section">
 
-      <div className="hero">
+      <div className="hero" style={{ backgroundImage: `linear-gradient(90deg, rgba(249,241,227,.98) 0%, rgba(249,241,227,.92) 44%, rgba(249,241,227,.28) 74%, rgba(249,241,227,.04) 100%), url(${heroImage})` }}>
         <div>
           <span className="eyebrow">
             WELCOME TO CHOWLY
@@ -364,21 +387,14 @@ const drinks = filteredMenu.filter(
         <div className="menu-column">
           <div className="table-selector">
             <label htmlFor="tableNumber">Table Number</label>
-
             <select
               id="tableNumber"
               value={tableNumber}
-              onChange={(event) =>
-                setTableNumber(event.target.value)
-              }
+              onChange={(event) => setTableNumber(event.target.value)}
             >
               <option value="">Select your table</option>
-
               {Array.from({ length: 20 }, (_, index) => (
-                <option
-                  key={index + 1}
-                  value={index + 1}
-                >
+                <option key={index + 1} value={index + 1}>
                   Table {index + 1}
                 </option>
               ))}
@@ -390,23 +406,17 @@ const drinks = filteredMenu.filter(
               type="text"
               placeholder="Search menu..."
               value={searchTerm}
-              onChange={(event) =>
-                setSearchTerm(event.target.value)
-              }
+              onChange={(event) => setSearchTerm(event.target.value)}
             />
-
             <div className="category-buttons">
-              {["All", "Food", "Drink"].map((itemCategory) => (
+              {['All', 'Food', 'Drink'].map((itemCategory) => (
                 <button
                   key={itemCategory}
-                  className={
-                    category === itemCategory ? "active" : ""
-                  }
+                  type="button"
+                  className={category === itemCategory ? 'active' : ''}
                   onClick={() => setCategory(itemCategory)}
                 >
-                  {itemCategory === "Drink"
-                    ? "Drinks"
-                    : itemCategory}
+                  {itemCategory === 'Drink' ? 'Drinks' : itemCategory}
                 </button>
               ))}
             </div>
@@ -417,12 +427,15 @@ const drinks = filteredMenu.filter(
               title="Food"
               items={food}
               addToCart={addToCart}
+              showAll={showAllFood}
+              onToggle={() => setShowAllFood((value) => !value)}
             />
-
             <MenuSection
               title="Drinks"
               items={drinks}
               addToCart={addToCart}
+              showAll={showAllDrinks}
+              onToggle={() => setShowAllDrinks((value) => !value)}
             />
           </div>
         </div>
@@ -433,75 +446,63 @@ const drinks = filteredMenu.filter(
               <h2>Order History</h2>
               <p>Your previous Chowly orders</p>
             </div>
-
             {orderHistory.length === 0 ? (
               <div className="empty-history">
                 <p>No previous orders yet.</p>
               </div>
             ) : (
-              <div className="history-list">
-                {orderHistory.map((historyOrder) => (
-                  <div
-                    className="history-card"
-                    key={historyOrder.id}
+              <>
+                <div className="history-actions">
+                  <button
+                    type="button"
+                    className="view-all-button"
+                    onClick={() => setShowAllHistory((value) => !value)}
                   >
+                    {showAllHistory ? "Show recent" : "View all"} <span>→</span>
+                  </button>
+                </div>
+                <div className="history-list">
+                {orderHistory
+                  .filter((historyOrder) => !order || historyOrder.id !== order.id)
+                  .slice(0, showAllHistory ? undefined : 3)
+                  .map((historyOrder) => (
+                  <div className="history-card" key={historyOrder.id}>
                     <div className="history-card-top">
                       <div>
                         <h3>Order #{historyOrder.id}</h3>
-                        <p>
-                          {new Date(
-                            historyOrder.created_at
-                          ).toLocaleString()}
-                        </p>
+                        <p>{new Date(historyOrder.created_at).toLocaleString()}</p>
                       </div>
-
-                      <span
-                        className={`history-status ${historyOrder.status}`}
-                      >
+                      <span className={`history-status ${historyOrder.status}`}>
                         {historyOrder.status}
                       </span>
                     </div>
-
                     <div className="history-items">
-                      {historyOrder.order_items?.map((item) => (
+                      {historyOrder.order_items?.map((item, index) => (
                         <div
                           className="history-item"
-                          key={`${historyOrder.id}-${item.id}`}
+                          key={`${historyOrder.id}-${item.menu_items?.name || index}`}
                         >
+                          <span>{item.quantity} × {item.menu_items?.name}</span>
                           <span>
-                            {item.quantity} × {item.menu_items?.name}
-                          </span>
-
-                          <span>
-                            ₦{(
-                              Number(item.price) *
-                              Number(item.quantity)
-                            ).toLocaleString()}
+                            ₦{(Number(item.price) * Number(item.quantity)).toLocaleString()}
                           </span>
                         </div>
                       ))}
                     </div>
-
                     <div className="history-total">
                       <strong>Total</strong>
-                      <strong>
-                        ₦{Number(
-                          historyOrder.total_amount
-                        ).toLocaleString()}
-                      </strong>
+                      <strong>₦{Number(historyOrder.total_amount).toLocaleString()}</strong>
                     </div>
-
                     <div className="history-payment">
-                      Payment:{" "}
+                      Payment:{' '}
                       <strong>
-                        {historyOrder.payment_status === "paid"
-                          ? "Paid"
-                          : "Unpaid"}
+                        {historyOrder.payment_status === 'paid' ? 'Paid' : 'Unpaid'}
                       </strong>
                     </div>
                   </div>
                 ))}
-              </div>
+                </div>
+              </>
             )}
           </section>
 
@@ -516,7 +517,6 @@ const drinks = filteredMenu.filter(
           />
         </aside>
       </div>
-
     </section>
   );
 }
@@ -526,71 +526,137 @@ const drinks = filteredMenu.filter(
    MENU SECTION
 ========================================= */
 
-function MenuSection({
-  title,
-  items,
-  addToCart
-})  
-{
+const MENU_IMAGES = {
+  jollof: jollofRiceImage,
+  friedRice: friedRiceImage,
+  grilledChicken: grilledChickenImage,
+  pasta: pastaAlfredoImage,
+  burger: beefBurgerImage,
+  pizza: pizzaImage,
+  coke: cokeImage,
+  orangeJuice: orangeJuiceImage,
+  smoothie: strawberrySmoothieImage,
+  water: waterImage,
+  latte: latteImage
+};
+
+// Exact drink images for common restaurant drinks. These are only used when the
+// database item name clearly matches the drink; otherwise we use the local assets.
+const DRINK_IMAGES = {
+  sprite: spriteImage,
+  fanta: fantaImage,
+  sevenUp: sevenUpImage,
+  chapman: chapmanImage,
+  milkshake: milkshakeImage
+};
+
+function getMenuImage(item) {
+  const name = String(item?.name || "").toLowerCase().trim();
+  const category = String(item?.category || "").toLowerCase().trim();
+
+  if (name.includes("jollof")) return MENU_IMAGES.jollof;
+  if (name.includes("fried rice")) return MENU_IMAGES.friedRice;
+  if (name.includes("grilled chicken")) return MENU_IMAGES.grilledChicken;
+  if (name.includes("alfredo")) return MENU_IMAGES.pasta;
+  if (name.includes("pasta")) return MENU_IMAGES.pasta;
+  if (name.includes("spaghetti")) return MENU_IMAGES.pasta;
+  if (name.includes("burger")) return MENU_IMAGES.burger;
+  if (name.includes("pizza")) return MENU_IMAGES.pizza;
+
+  if (name.includes("coke") || name.includes("coca")) return MENU_IMAGES.coke;
+  if (name.includes("sprite")) return DRINK_IMAGES.sprite;
+  if (name.includes("fanta")) return DRINK_IMAGES.fanta;
+  if (name.includes("7up") || name.includes("7 up") || name.includes("seven up")) return DRINK_IMAGES.sevenUp;
+  if (name.includes("chapman")) return DRINK_IMAGES.chapman;
+  if (name.includes("milkshake") || name.includes("milk shake")) return DRINK_IMAGES.milkshake;
+  if (name.includes("orange juice")) return MENU_IMAGES.orangeJuice;
+  if (name === "juice" || name.includes("fruit juice")) return MENU_IMAGES.orangeJuice;
+  if (name.includes("strawberry") || name.includes("smoothie")) return MENU_IMAGES.smoothie;
+  if (name.includes("water")) return MENU_IMAGES.water;
+  if (name.includes("latte") || name.includes("coffee") || name.includes("cappuccino") || name.includes("espresso")) return MENU_IMAGES.latte;
+
+  return category === "drink" ? MENU_IMAGES.water : MENU_IMAGES.jollof;
+}
+
+function categoryFallbackImage(item) {
+  const category = String(item?.category || "").toLowerCase();
+  return category === "drink" ? MENU_IMAGES.water : MENU_IMAGES.jollof;
+}
+
+function MenuSection({ title, items, addToCart, showAll, onToggle }) {
+  const isFood = title.toLowerCase() === "food";
+  const initialCount = isFood ? 4 : 5;
+  const visibleItems = showAll ? items : items.slice(0, initialCount);
+  const hasMore = items.length > initialCount;
+
   return (
-    <div className="menu-section">
+    <section className={`menu-section ${isFood ? "food-section" : "drink-section"}`}>
+      <div className="section-title-row">
+        <div>
+          <span className="section-eyebrow">{isFood ? "OUR MENU" : "SOMETHING TO SIP"}</span>
+          <h2>{title}</h2>
+          <p>{isFood ? "Freshly prepared favourites" : "Refreshing drinks and beverages"}</p>
+        </div>
 
-      <div className="section-heading">
-        <h2>{title}</h2>
-        <span>{items.length} items</span>
+        {hasMore && (
+          <button className="view-all-button" type="button" onClick={onToggle}>
+            {showAll ? "Show less" : "View all"}
+            <span aria-hidden="true">{showAll ? "↑" : "→"}</span>
+          </button>
+        )}
       </div>
 
-      <div className="menu-grid">
+      {items.length === 0 ? (
+        <div className="empty-menu">No {title.toLowerCase()} items found.</div>
+      ) : (
+        <div className="menu-grid">
+          {visibleItems.map((item) => {
+            const image = getMenuImage(item);
 
-        {items.map((item) => (
-          <div
-            className="menu-card"
-            key={item.id}
-          >
-            <div className="food-icon">
-              {item.category === "Food"
-                ? "🍽️"
-                : "🥤"}
-            </div>
+            return (
+              <article className="menu-card" key={item.id}>
+                <div className="menu-image-wrap">
+                  <img
+                    src={image}
+                    alt={item.name}
+                    className="menu-image"
+                    loading="eager"
+                    decoding="async"
+                    onError={(event) => {
+                      event.currentTarget.onerror = null;
+                      event.currentTarget.src = categoryFallbackImage(item);
+                    }}
+                  />
+                </div>
 
-            <div className="menu-card-content">
+                <div className="menu-card-body">
+                  <div className="menu-card-copy">
+                    <h3>{item.name}</h3>
+                    <p className="prep-time">{Number(item.preparation_time) || 0} min preparation</p>
+                  </div>
 
-              <h3>{item.name}</h3>
-
-              <p>
-                Preparation time:{" "}
-                {item.preparation_time} min
-              </p>
-
-              <div className="menu-card-footer">
-
-                <strong>
-                  ₦{Number(item.price).toLocaleString()}
-                </strong>
-
-                <button
-                  onClick={() => addToCart(item)}
-                >
-                  Add
-                </button>
-
-              </div>
-
-            </div>
-
-          </div>
-        ))}
-
-      </div>
-
-    </div>
+                  <div className="menu-card-bottom">
+                    <strong className="menu-price">
+                      ₦{Number(item.price).toLocaleString()}
+                    </strong>
+                    <button
+                      className="add-button"
+                      type="button"
+                      onClick={() => addToCart(item)}
+                    >
+                      Add <span>+</span>
+                    </button>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      )}
+    </section>
   );
 }
 
-
-/* =========================================
-   CART
-========================================= */
 
 function Cart({
   cart,
@@ -619,7 +685,7 @@ function Cart({
 
       {cart.length === 0 ? (
         <div className="empty-cart">
-          <div className="empty-icon">🛒</div>
+          <div className="empty-cart-symbol">+</div>
 
           <h3>Your order is empty</h3>
 
@@ -638,44 +704,24 @@ function Cart({
                 key={item.id}
               >
 
-                <div>
+                <img
+                  src={getMenuImage(item)}
+                  alt={item.name}
+                  className="cart-item-image"
+                  loading="lazy"
+                />
+
+                <div className="cart-item-info">
                   <strong>{item.name}</strong>
-
-                  <small>
-                    ₦{Number(item.price).toLocaleString()}
-                  </small>
+                  <span>₦{Number(item.price).toLocaleString()}</span>
+                  <div className="quantity-controls">
+                    <button type="button" onClick={() => decreaseQuantity(item.id)}>−</button>
+                    <span>{item.quantity}</span>
+                    <button type="button" onClick={() => increaseQuantity(item.id)}>+</button>
+                  </div>
                 </div>
 
-                <div className="quantity-controls">
-
-                  <button
-                    onClick={() =>
-                      decreaseQuantity(item.id)
-                    }
-                  >
-                    −
-                  </button>
-
-                  <span>{item.quantity}</span>
-
-                  <button
-                    onClick={() =>
-                      increaseQuantity(item.id)
-                    }
-                  >
-                    +
-                  </button>
-
-                </div>
-
-                <button
-                  className="remove-button"
-                  onClick={() =>
-                    removeFromCart(item.id)
-                  }
-                >
-                  Remove
-                </button>
+<button type="button" className="remove-button" aria-label={`Remove ${item.name}`} onClick={() => removeFromCart(item.id)}>×</button>
 
               </div>
             ))}
@@ -683,19 +729,14 @@ function Cart({
           </div>
 
           <div className="cart-summary">
-
-            <div>
+            <div className="wait-row">
               <span>Estimated wait</span>
-              <strong>{waitingTime} minutes</strong>
+              <strong>{waitingTime} min</strong>
             </div>
-
-            <div>
+            <div className="total-row-cart">
               <span>Total</span>
-              <strong>
-                ₦{Number(total).toLocaleString()}
-              </strong>
+              <strong>₦{Number(total).toLocaleString()}</strong>
             </div>
-
           </div>
 
           <button
@@ -727,6 +768,11 @@ function CustomerOrder({
 
   const [rating, setRating] =
     useState(order.rating || 0);
+
+  useEffect(() => {
+    setComplaint(order.complaint || "");
+    setRating(order.rating || 0);
+  }, [order.complaint, order.rating]);
 
   const [savingFeedback, setSavingFeedback] =
     useState(false);
@@ -1148,6 +1194,7 @@ function Waiter() {
 
   const [message, setMessage] =
     useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -1219,51 +1266,75 @@ function Waiter() {
     );
   }
 
-  async function updateOrderStatus(newStatus) {
-  if (!selectedOrder) {
-    return;
+  async function saveAssignments() {
+    if (!selectedOrder) return false;
+
+    if (!chefId || !bartenderId) {
+      setMessage("Please select both a chef and bartender.");
+      return false;
+    }
+
+    setSaving(true);
+
+    const { error } = await supabase
+      .from("orders")
+      .update({
+        chef_id: Number(chefId),
+        bartender_id: Number(bartenderId)
+      })
+      .eq("id", selectedOrder.id);
+
+    setSaving(false);
+
+    if (error) {
+      console.error(error);
+      setMessage("Could not save the staff assignment.");
+      return false;
+    }
+
+    setMessage(`Staff assigned to order #${selectedOrder.id}.`);
+    await loadData();
+    return true;
   }
 
-  const updates = {
-    status: newStatus
-  };
+  async function updateOrderStatus(newStatus) {
+    if (!selectedOrder) return;
 
-  // Chef and bartender are required before serving
-  if (newStatus === "served") {
     if (!chefId || !bartenderId) {
-      setMessage("Please assign both a chef and bartender.");
+      setMessage("Please select both a chef and bartender before continuing.");
       return;
     }
 
-    updates.chef_id = Number(chefId);
-    updates.bartender_id = Number(bartenderId);
+    setSaving(true);
+
+    const { error } = await supabase
+      .from("orders")
+      .update({
+        status: newStatus,
+        chef_id: Number(chefId),
+        bartender_id: Number(bartenderId)
+      })
+      .eq("id", selectedOrder.id);
+
+    setSaving(false);
+
+    if (error) {
+      console.error(error);
+      setMessage("Could not update the order. Please try again.");
+      return;
+    }
+
+    setMessage(`Order #${selectedOrder.id} is now ${newStatus}.`);
+    setSelectedOrder(null);
+    await loadData();
   }
-
-  const { error } = await supabase
-    .from("orders")
-    .update(updates)
-    .eq("id", selectedOrder.id);
-
-  if (error) {
-    console.error(error);
-    setMessage("Could not update the order.");
-    return;
-  }
-
-  setMessage(
-    `Order #${selectedOrder.id} is now ${newStatus}.`
-  );
-
-  setSelectedOrder(null);
-  await loadData();
-}
 
   const chefs = staff.filter(
-    (person) => person.role === "Chef"
+    (person) => String(person.role || "").toLowerCase() === "chef"
   );
 
   const bartenders = staff.filter(
-    (person) => person.role === "Bartender"
+    (person) => String(person.role || "").toLowerCase() === "bartender"
   );
 
   if (loading) {
@@ -1308,7 +1379,7 @@ function Waiter() {
         </div>
       )}
 
-      <div className="orders-grid">
+      <div className="orders-list">
 
         {orders.length === 0 ? (
           <div className="empty-dashboard">
@@ -1396,12 +1467,12 @@ function Waiter() {
 
 
       {selectedOrder && (
-        <div className="modal-overlay">
+        <div className="order-modal-overlay">
 
-          <div className="modal">
+          <div className="order-modal">
 
             <button
-              className="close-button"
+              className="modal-close"
               onClick={() =>
                 setSelectedOrder(null)
               }
@@ -1514,23 +1585,38 @@ function Waiter() {
             </div>
 
 
-            {selectedOrder.status === "pending" && (
-  <button
-    className="primary-button"
-    onClick={() => updateOrderStatus("preparing")}
-  >
-    Start Preparing
-  </button>
-)}
+            <div className="order-modal-actions">
+              <button
+                className="secondary-button"
+                type="button"
+                onClick={saveAssignments}
+                disabled={saving}
+              >
+                {saving ? "Saving..." : "Save Assignment"}
+              </button>
 
-{selectedOrder.status === "preparing" && (
-  <button
-    className="primary-button"
-    onClick={() => updateOrderStatus("served")}
-  >
-    Mark Order as Served
-  </button>
-)}
+              {selectedOrder.status === "pending" && (
+                <button
+                  className="primary-button"
+                  type="button"
+                  onClick={() => updateOrderStatus("preparing")}
+                  disabled={saving}
+                >
+                  Start Preparing
+                </button>
+              )}
+
+              {selectedOrder.status === "preparing" && (
+                <button
+                  className="primary-button"
+                  type="button"
+                  onClick={() => updateOrderStatus("served")}
+                  disabled={saving}
+                >
+                  Mark Order as Served
+                </button>
+              )}
+            </div>
 
           </div>
 
