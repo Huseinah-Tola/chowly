@@ -23,9 +23,11 @@ import milkshakeImage from "./assets/menu/milkshake.svg";
 // Premium external product photography for the three branded soft drinks.
 // Local SVG assets remain as fallbacks if an external image ever fails.
 const PREMIUM_DRINK_IMAGES = {
-  coke: "https://images.unsplash.com/photo-1629019416996-712aa1bd87f4?fm=jpg&ixlib=rb-4.1.0&q=85&w=1200",
-  fanta: "https://outofhome.se/media/catalog/product/cache/30/image/17f82f742ffe127f42dca9de82fb58b1/6/0/60432_fanta_sleek.jpg",
-  sprite: "https://mir-s3-cdn-cf.behance.net/project_modules/1400_webp/eec883193413997.65eb2186142c5.jpg",
+  // High-resolution product photography. Local SVG/JPG assets are kept as fallbacks.
+  coke: "https://images.unsplash.com/photo-1629019416996-712aa1bd87f4?fm=jpg&ixlib=rb-4.1.0&q=90&w=1600",
+  fanta: "https://commons.wikimedia.org/wiki/Special:Redirect/file/Fanta_Orange_Glass_Bottle.jpg",
+  sprite: "https://assets.nextorder.co/public/6d5db421-93f1-4d5d-8761-3f2a3af83c99",
+  chapman: "https://www.ikoyichapmans.co.uk/assets/img/cocktails/cocktails-1.png",
 };
 
 // Premium chicken shawarma photography so it never falls back to the Jollof Rice image.
@@ -559,7 +561,7 @@ const DRINK_IMAGES = {
   sprite: PREMIUM_DRINK_IMAGES.sprite,
   fanta: PREMIUM_DRINK_IMAGES.fanta,
   sevenUp: sevenUpImage,
-  chapman: chapmanImage,
+  chapman: PREMIUM_DRINK_IMAGES.chapman,
   milkshake: milkshakeImage
 };
 
@@ -644,7 +646,7 @@ function MenuSection({ title, items, addToCart, showAll, onToggle }) {
                   <img
                     src={image}
                     alt={item.name}
-                    className="menu-image"
+                    className={`menu-image ${item.category === "Drink" ? "drink-image" : ""}`}
                     loading="eager"
                     decoding="async"
                     onError={(event) => {
@@ -1062,8 +1064,7 @@ function CustomerOrder({
         </div>
 
 
-        {order.status !== "served" && (
-          <div className="card feedback-card">
+        <div className="card feedback-card">
 
             <span className="eyebrow">
               HAVING A PROBLEM?
@@ -1118,8 +1119,6 @@ function CustomerOrder({
             </button>
 
           </div>
-        )}
-
 
         {order.status === "served" &&
           order.payment_status === "unpaid" && (
@@ -1205,102 +1204,71 @@ function CustomerOrder({
 function Waiter() {
   const [orders, setOrders] = useState([]);
   const [staff, setStaff] = useState([]);
-  const [selectedOrder, setSelectedOrder] =
-    useState(null);
-
-  const [chefId, setChefId] =
-    useState("");
-
-  const [bartenderId, setBartenderId] =
-    useState("");
-
-  const [loading, setLoading] =
-    useState(true);
-
-  const [message, setMessage] =
-    useState("");
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [chefId, setChefId] = useState("");
+  const [bartenderId, setBartenderId] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
+  const [filter, setFilter] = useState("all");
 
   useEffect(() => {
     loadData();
-
-    const interval = setInterval(
-      loadData,
-      5000
-    );
-
+    const interval = setInterval(loadData, 5000);
     return () => clearInterval(interval);
   }, []);
 
   async function loadData() {
-    const { data: orderData, error } =
-      await supabase
-        .from("orders")
-        .select(`
+    const { data: orderData, error: orderError } = await supabase
+      .from("orders")
+      .select(`
+        *,
+        order_items (
           *,
-          order_items (
-            *,
-            menu_items (
-              name
-            )
-          ),
-          chef:staff!orders_chef_id_fkey (
-            name
-          ),
-          bartender:staff!orders_bartender_id_fkey (
-            name
-          )
-        `)
-        .order("created_at", {
-          ascending: false
-        });
+          menu_items (name)
+        ),
+        chef:staff!orders_chef_id_fkey (name),
+        bartender:staff!orders_bartender_id_fkey (name)
+      `)
+      .order("created_at", { ascending: false });
 
-    if (error) {
-      console.error(error);
-      setMessage(
-        "Could not load orders."
-      );
+    if (orderError) {
+      console.error(orderError);
+      setMessage("Could not load orders. Please check your Supabase connection.");
     } else {
-      setOrders(orderData);
+      setOrders(orderData || []);
     }
 
+    const { data: staffData, error: staffError } = await supabase
+      .from("staff")
+      .select("*")
+      .order("name");
 
-    const { data: staffData } =
-      await supabase
-        .from("staff")
-        .select("*")
-        .order("name");
+    if (staffError) {
+      console.error(staffError);
+    } else {
+      setStaff(staffData || []);
+    }
 
-    setStaff(staffData || []);
     setLoading(false);
   }
 
   function openOrder(order) {
     setSelectedOrder(order);
-
-    setChefId(
-      order.chef_id
-        ? String(order.chef_id)
-        : ""
-    );
-
-    setBartenderId(
-      order.bartender_id
-        ? String(order.bartender_id)
-        : ""
-    );
+    setChefId(order.chef_id ? String(order.chef_id) : "");
+    setBartenderId(order.bartender_id ? String(order.bartender_id) : "");
+    setMessage("");
   }
 
   async function saveAssignments() {
-    if (!selectedOrder) return false;
+    if (!selectedOrder) return;
 
     if (!chefId || !bartenderId) {
       setMessage("Please select both a chef and bartender.");
-      return false;
+      return;
     }
 
     setSaving(true);
-
     const { error } = await supabase
       .from("orders")
       .update({
@@ -1308,30 +1276,32 @@ function Waiter() {
         bartender_id: Number(bartenderId)
       })
       .eq("id", selectedOrder.id);
-
     setSaving(false);
 
     if (error) {
       console.error(error);
       setMessage("Could not save the staff assignment.");
-      return false;
+      return;
     }
 
     setMessage(`Staff assigned to order #${selectedOrder.id}.`);
     await loadData();
-    return true;
+    setSelectedOrder((current) => current ? {
+      ...current,
+      chef_id: Number(chefId),
+      bartender_id: Number(bartenderId)
+    } : null);
   }
 
   async function updateOrderStatus(newStatus) {
     if (!selectedOrder) return;
 
     if (!chefId || !bartenderId) {
-      setMessage("Please select both a chef and bartender before continuing.");
+      setMessage("Please select both a chef and bartender before changing the order status.");
       return;
     }
 
     setSaving(true);
-
     const { error } = await supabase
       .from("orders")
       .update({
@@ -1340,7 +1310,6 @@ function Waiter() {
         bartender_id: Number(bartenderId)
       })
       .eq("id", selectedOrder.id);
-
     setSaving(false);
 
     if (error) {
@@ -1349,8 +1318,8 @@ function Waiter() {
       return;
     }
 
-    setMessage(`Order #${selectedOrder.id} is now ${newStatus}.`);
     setSelectedOrder(null);
+    setMessage(`Order #${selectedOrder.id} is now ${newStatus}.`);
     await loadData();
   }
 
@@ -1362,295 +1331,189 @@ function Waiter() {
     (person) => String(person.role || "").toLowerCase() === "bartender"
   );
 
+  const counts = {
+    all: orders.length,
+    pending: orders.filter((order) => order.status === "pending").length,
+    preparing: orders.filter((order) => order.status === "preparing").length,
+    served: orders.filter((order) => order.status === "served").length
+  };
+
+  const visibleOrders = filter === "all"
+    ? orders
+    : orders.filter((order) => order.status === filter);
+
   if (loading) {
     return (
       <section className="section">
-        <div className="loading">
-          Loading waiter dashboard...
-        </div>
+        <div className="loading">Loading waiter dashboard...</div>
       </section>
     );
   }
 
   return (
     <section className="section">
-
       <div className="dashboard-header">
-
         <div>
-          <span className="eyebrow">
-            STAFF DASHBOARD
-          </span>
-
-          <h2>
-            Today's Orders
-          </h2>
-
-          <p>
-            Manage incoming restaurant orders.
-          </p>
+          <span className="eyebrow">STAFF DASHBOARD</span>
+          <h2>Active Orders</h2>
+          <p>Manage and track all customer orders in real time.</p>
         </div>
-
         <div className="dashboard-stat">
           <strong>{orders.length}</strong>
           <span>Total Orders</span>
         </div>
-
       </div>
 
-      {message && (
-        <div className="message">
-          {message}
-        </div>
-      )}
+      {message && <div className="message">{message}</div>}
+
+      <div className="order-filters" role="tablist" aria-label="Order status filters">
+        {[
+          ["all", "All"],
+          ["pending", "Pending"],
+          ["preparing", "Preparing"],
+          ["served", "Served"]
+        ].map(([value, label]) => (
+          <button
+            key={value}
+            type="button"
+            className={filter === value ? "active" : ""}
+            onClick={() => setFilter(value)}
+          >
+            {label} <span>({counts[value]})</span>
+          </button>
+        ))}
+      </div>
 
       <div className="orders-list">
-
-        {orders.length === 0 ? (
+        {visibleOrders.length === 0 ? (
           <div className="empty-dashboard">
-            <h3>
-              No orders yet
-            </h3>
-
-            <p>
-              New customer orders will appear here.
-            </p>
+            <h3>No {filter === "all" ? "orders" : filter + " orders"} found</h3>
+            <p>New customer orders will appear here automatically.</p>
           </div>
         ) : (
-          orders.map((order) => (
-            <div
-              className="order-card"
-              key={order.id}
-            >
-
+          visibleOrders.map((order) => (
+            <article className="order-card" key={order.id}>
               <div className="order-card-top">
-
                 <div>
-                  <span className="eyebrow">
-                    ORDER
-                  </span>
-
-                  <h3>
-                    #{order.id}
-                  </h3>
-                  {order.table_number && (
-                    <p className="order-table">
-                      Table {order.table_number}
-                    </p>
-)}
+                  <span className="eyebrow">ORDER #{order.id}</span>
+                  <h3>{order.table_number ? `Table ${order.table_number}` : "Table not selected"}</h3>
+                  <p className="order-date">
+                    {new Date(order.created_at).toLocaleString()}
+                  </p>
                 </div>
-
-                <span
-                  className={`status ${order.status}`}
-                >
-                  {order.status}
-                </span>
-
+                <span className={`status ${order.status}`}>{order.status}</span>
               </div>
 
               <div className="order-items">
-
-                {order.order_items?.map(
-                  (item) => (
-                    <div
-                      key={item.id}
-                    >
-                      {item.menu_items?.name}
-                      {" × "}
-                      {item.quantity}
-                    </div>
-                  )
-                )}
-
+                {order.order_items?.map((item) => (
+                  <div className="order-item-line" key={item.id}>
+                    <span>{item.quantity} × {item.menu_items?.name || "Menu item"}</span>
+                    <span>₦{(Number(item.price) * Number(item.quantity)).toLocaleString()}</span>
+                  </div>
+                ))}
               </div>
 
-              <div className="order-card-bottom">
-
-                <strong>
-                  ₦
-                  {Number(
-                    order.total_amount
-                  ).toLocaleString()}
-                </strong>
-
-                <button
-                  className="add-button waiter-open-button"
-                  onClick={() =>
-                    openOrder(order)
-                  }
-                >
-                  Open Order
-                </button>
-
+              <div className="order-total-line">
+                <strong>Total</strong>
+                <strong>₦{Number(order.total_amount).toLocaleString()}</strong>
               </div>
 
-            </div>
+              <div className="assigned-staff">
+                <span>Chef: {order.chef?.name || "—"}</span>
+                <span>Bartender: {order.bartender?.name || "—"}</span>
+              </div>
+
+              <button
+                type="button"
+                className="add-button waiter-open-button"
+                onClick={() => openOrder(order)}
+              >
+                <span aria-hidden="true">🍴</span>
+                Open Order
+              </button>
+            </article>
           ))
         )}
-
       </div>
 
-
       {selectedOrder && (
-        <div className="order-modal-overlay">
-
-          <div className="order-modal">
-
+        <div className="order-modal-overlay" onMouseDown={(event) => {
+          if (event.target === event.currentTarget && !saving) setSelectedOrder(null);
+        }}>
+          <div className="order-modal" role="dialog" aria-modal="true" aria-labelledby="order-modal-title">
             <button
               className="modal-close"
-              onClick={() =>
-                setSelectedOrder(null)
-              }
-            >
-              ×
-            </button>
+              type="button"
+              onClick={() => !saving && setSelectedOrder(null)}
+              aria-label="Close order"
+            >×</button>
 
-            <span className="eyebrow">
-              ORDER #{selectedOrder.id}
-            </span>
+            <span className="eyebrow">ORDER #{selectedOrder.id}</span>
+            <h2 id="order-modal-title">Manage Order</h2>
 
-            <h2>
-              Assign Order
-            </h2>
+            <div className="modal-order-meta">
+              <strong>{selectedOrder.table_number ? `Table ${selectedOrder.table_number}` : "Table not selected"}</strong>
+              <span className={`status ${selectedOrder.status}`}>{selectedOrder.status}</span>
+            </div>
 
             <div className="modal-items">
-
-              {selectedOrder.order_items?.map(
-                (item) => (
-                  <div
-                    className="detail-row"
-                    key={item.id}
-                  >
-                    <span>
-                      {item.menu_items?.name}
-                      {" × "}
-                      {item.quantity}
-                    </span>
-
-                    <strong>
-                      ₦
-                      {Number(
-                        item.price *
-                        item.quantity
-                      ).toLocaleString()}
-                    </strong>
-                  </div>
-                )
-              )}
-
+              {selectedOrder.order_items?.map((item) => (
+                <div className="detail-row" key={item.id}>
+                  <span>{item.menu_items?.name || "Menu item"} × {item.quantity}</span>
+                  <strong>₦{(Number(item.price) * Number(item.quantity)).toLocaleString()}</strong>
+                </div>
+              ))}
             </div>
 
-            <label>
-              Chef
+            <label htmlFor="chef-select">Chef</label>
+            <select id="chef-select" value={chefId} onChange={(event) => setChefId(event.target.value)}>
+              <option value="">Select chef</option>
+              {chefs.map((chef) => (
+                <option key={chef.id} value={chef.id}>{chef.name}</option>
+              ))}
+            </select>
 
-              <select
-                value={chefId}
-                onChange={(event) =>
-                  setChefId(event.target.value)
-                }
-              >
-                <option value="">
-                  Select chef
-                </option>
-
-                {chefs.map((chef) => (
-                  <option
-                    key={chef.id}
-                    value={chef.id}
-                  >
-                    {chef.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-
-            <label>
-              Bartender
-
-              <select
-                value={bartenderId}
-                onChange={(event) =>
-                  setBartenderId(
-                    event.target.value
-                  )
-                }
-              >
-                <option value="">
-                  Select bartender
-                </option>
-
-                {bartenders.map(
-                  (bartender) => (
-                    <option
-                      key={bartender.id}
-                      value={bartender.id}
-                    >
-                      {bartender.name}
-                    </option>
-                  )
-                )}
-              </select>
-            </label>
-
+            <label htmlFor="bartender-select">Bartender</label>
+            <select id="bartender-select" value={bartenderId} onChange={(event) => setBartenderId(event.target.value)}>
+              <option value="">Select bartender</option>
+              {bartenders.map((bartender) => (
+                <option key={bartender.id} value={bartender.id}>{bartender.name}</option>
+              ))}
+            </select>
 
             <div className="modal-total">
-
-              <span>
-                Order Total
-              </span>
-
-              <strong>
-                ₦
-                {Number(
-                  selectedOrder.total_amount
-                ).toLocaleString()}
-              </strong>
-
+              <span>Order Total</span>
+              <strong>₦{Number(selectedOrder.total_amount).toLocaleString()}</strong>
             </div>
 
-
             <div className="order-modal-actions">
-              <button
-                className="secondary-button"
-                type="button"
-                onClick={saveAssignments}
-                disabled={saving}
-              >
+              <button className="secondary-button" type="button" onClick={saveAssignments} disabled={saving}>
                 {saving ? "Saving..." : "Save Assignment"}
               </button>
 
               {selectedOrder.status === "pending" && (
-                <button
-                  className="primary-button"
-                  type="button"
-                  onClick={() => updateOrderStatus("preparing")}
-                  disabled={saving}
-                >
+                <button className="primary-button" type="button" onClick={() => updateOrderStatus("preparing")} disabled={saving}>
                   Start Preparing
                 </button>
               )}
 
               {selectedOrder.status === "preparing" && (
-                <button
-                  className="primary-button"
-                  type="button"
-                  onClick={() => updateOrderStatus("served")}
-                  disabled={saving}
-                >
-                  Mark Order as Served
+                <button className="primary-button" type="button" onClick={() => updateOrderStatus("served")} disabled={saving}>
+                  Mark as Served
+                </button>
+              )}
+
+              {selectedOrder.status === "served" && (
+                <button className="secondary-button" type="button" onClick={() => setSelectedOrder(null)} disabled={saving}>
+                  Close
                 </button>
               )}
             </div>
-
           </div>
-
         </div>
       )}
-
     </section>
   );
 }
-
 
 export default App;
