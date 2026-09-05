@@ -530,23 +530,8 @@ function MenuSection({
   title,
   items,
   addToCart
-}) {
-  // Real restaurant-style photos make the menu much more appealing than emojis.
-  // The images are reused across items, so no database changes are required.
-  const foodImages = [
-    "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=900&q=85",
-    "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=900&q=85",
-    "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=900&q=85",
-    "https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=900&q=85"
-  ];
-
-  const drinkImages = [
-    "https://images.unsplash.com/photo-1544145945-f90425340c7e?auto=format&fit=crop&w=900&q=85",
-    "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=900&q=85",
-    "https://images.unsplash.com/photo-1551024709-8f23befc6f87?auto=format&fit=crop&w=900&q=85",
-    "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=900&q=85"
-  ];
-
+})  
+{
   return (
     <div className="menu-section">
 
@@ -557,68 +542,44 @@ function MenuSection({
 
       <div className="menu-grid">
 
-        {items.map((item, index) => {
-          const images = item.category === "Drink" ? drinkImages : foodImages;
-          const image = images[index % images.length];
+        {items.map((item) => (
+          <div
+            className="menu-card"
+            key={item.id}
+          >
+            <div className="food-icon">
+              {item.category === "Food"
+                ? "🍽️"
+                : "🥤"}
+            </div>
 
-          return (
-            <div
-              className="menu-card"
-              key={item.id}
-            >
-              <div
-                className="food-icon"
-                style={{
-                  width: "100%",
-                  height: "190px",
-                  padding: 0,
-                  overflow: "hidden",
-                  borderRadius: "18px 18px 0 0",
-                  display: "block",
-                  background: "#eee4d5"
-                }}
-              >
-                <img
-                  src={image}
-                  alt={item.name}
-                  loading="lazy"
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                    display: "block"
-                  }}
-                />
-              </div>
+            <div className="menu-card-content">
 
-              <div className="menu-card-content">
+              <h3>{item.name}</h3>
 
-                <h3>{item.name}</h3>
+              <p>
+                Preparation time:{" "}
+                {item.preparation_time} min
+              </p>
 
-                <p>
-                  Preparation time:{" "}
-                  {item.preparation_time} min
-                </p>
+              <div className="menu-card-footer">
 
-                <div className="menu-card-footer">
+                <strong>
+                  ₦{Number(item.price).toLocaleString()}
+                </strong>
 
-                  <strong>
-                    ₦{Number(item.price).toLocaleString()}
-                  </strong>
-
-                  <button
-                    onClick={() => addToCart(item)}
-                  >
-                    Add
-                  </button>
-
-                </div>
+                <button
+                  onClick={() => addToCart(item)}
+                >
+                  Add
+                </button>
 
               </div>
 
             </div>
-          );
-        })}
+
+          </div>
+        ))}
 
       </div>
 
