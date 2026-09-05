@@ -364,21 +364,14 @@ const drinks = filteredMenu.filter(
         <div className="menu-column">
           <div className="table-selector">
             <label htmlFor="tableNumber">Table Number</label>
-
             <select
               id="tableNumber"
               value={tableNumber}
-              onChange={(event) =>
-                setTableNumber(event.target.value)
-              }
+              onChange={(event) => setTableNumber(event.target.value)}
             >
               <option value="">Select your table</option>
-
               {Array.from({ length: 20 }, (_, index) => (
-                <option
-                  key={index + 1}
-                  value={index + 1}
-                >
+                <option key={index + 1} value={index + 1}>
                   Table {index + 1}
                 </option>
               ))}
@@ -390,40 +383,25 @@ const drinks = filteredMenu.filter(
               type="text"
               placeholder="Search menu..."
               value={searchTerm}
-              onChange={(event) =>
-                setSearchTerm(event.target.value)
-              }
+              onChange={(event) => setSearchTerm(event.target.value)}
             />
-
             <div className="category-buttons">
-              {["All", "Food", "Drink"].map((itemCategory) => (
+              {['All', 'Food', 'Drink'].map((itemCategory) => (
                 <button
                   key={itemCategory}
-                  className={
-                    category === itemCategory ? "active" : ""
-                  }
+                  type="button"
+                  className={category === itemCategory ? 'active' : ''}
                   onClick={() => setCategory(itemCategory)}
                 >
-                  {itemCategory === "Drink"
-                    ? "Drinks"
-                    : itemCategory}
+                  {itemCategory === 'Drink' ? 'Drinks' : itemCategory}
                 </button>
               ))}
             </div>
           </div>
 
           <div className="menu-list">
-            <MenuSection
-              title="Food"
-              items={food}
-              addToCart={addToCart}
-            />
-
-            <MenuSection
-              title="Drinks"
-              items={drinks}
-              addToCart={addToCart}
-            />
+            <MenuSection title="Food" items={food} addToCart={addToCart} />
+            <MenuSection title="Drinks" items={drinks} addToCart={addToCart} />
           </div>
         </div>
 
@@ -433,7 +411,6 @@ const drinks = filteredMenu.filter(
               <h2>Order History</h2>
               <p>Your previous Chowly orders</p>
             </div>
-
             {orderHistory.length === 0 ? (
               <div className="empty-history">
                 <p>No previous orders yet.</p>
@@ -441,62 +418,37 @@ const drinks = filteredMenu.filter(
             ) : (
               <div className="history-list">
                 {orderHistory.map((historyOrder) => (
-                  <div
-                    className="history-card"
-                    key={historyOrder.id}
-                  >
+                  <div className="history-card" key={historyOrder.id}>
                     <div className="history-card-top">
                       <div>
                         <h3>Order #{historyOrder.id}</h3>
-                        <p>
-                          {new Date(
-                            historyOrder.created_at
-                          ).toLocaleString()}
-                        </p>
+                        <p>{new Date(historyOrder.created_at).toLocaleString()}</p>
                       </div>
-
-                      <span
-                        className={`history-status ${historyOrder.status}`}
-                      >
+                      <span className={`history-status ${historyOrder.status}`}>
                         {historyOrder.status}
                       </span>
                     </div>
-
                     <div className="history-items">
-                      {historyOrder.order_items?.map((item) => (
+                      {historyOrder.order_items?.map((item, index) => (
                         <div
                           className="history-item"
-                          key={`${historyOrder.id}-${item.id}`}
+                          key={`${historyOrder.id}-${item.menu_items?.name || index}`}
                         >
+                          <span>{item.quantity} × {item.menu_items?.name}</span>
                           <span>
-                            {item.quantity} × {item.menu_items?.name}
-                          </span>
-
-                          <span>
-                            ₦{(
-                              Number(item.price) *
-                              Number(item.quantity)
-                            ).toLocaleString()}
+                            ₦{(Number(item.price) * Number(item.quantity)).toLocaleString()}
                           </span>
                         </div>
                       ))}
                     </div>
-
                     <div className="history-total">
                       <strong>Total</strong>
-                      <strong>
-                        ₦{Number(
-                          historyOrder.total_amount
-                        ).toLocaleString()}
-                      </strong>
+                      <strong>₦{Number(historyOrder.total_amount).toLocaleString()}</strong>
                     </div>
-
                     <div className="history-payment">
-                      Payment:{" "}
+                      Payment:{' '}
                       <strong>
-                        {historyOrder.payment_status === "paid"
-                          ? "Paid"
-                          : "Unpaid"}
+                        {historyOrder.payment_status === 'paid' ? 'Paid' : 'Unpaid'}
                       </strong>
                     </div>
                   </div>
@@ -516,7 +468,6 @@ const drinks = filteredMenu.filter(
           />
         </aside>
       </div>
-
     </section>
   );
 }
@@ -526,71 +477,132 @@ const drinks = filteredMenu.filter(
    MENU SECTION
 ========================================= */
 
-function MenuSection({
-  title,
-  items,
-  addToCart
-})  
-{
-  return (
-    <div className="menu-section">
+const FOOD_IMAGES = [
+  'https://images.unsplash.com/photo-1603133872878-684f208fb84b?auto=format&fit=crop&w=1000&q=88',
+  'https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&w=1000&q=88',
+  'https://images.unsplash.com/photo-1532550907401-a500c9a57435?auto=format&fit=crop&w=1000&q=88',
+  'https://images.unsplash.com/photo-1473093295043-cdd812d0e601?auto=format&fit=crop&w=1000&q=88',
+  'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=1000&q=88',
+  'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=1000&q=88',
+  'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?auto=format&fit=crop&w=1000&q=88',
+  'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=1000&q=88'
+];
 
-      <div className="section-heading">
-        <h2>{title}</h2>
-        <span>{items.length} items</span>
-      </div>
+const DRINK_IMAGES = [
+  'https://images.unsplash.com/photo-1629203849820-fdd70d49c38e?auto=format&fit=crop&w=900&q=88',
+  'https://images.unsplash.com/photo-1600271886742-f049cd451bba?auto=format&fit=crop&w=900&q=88',
+  'https://images.unsplash.com/photo-1553530666-ba11a7da3888?auto=format&fit=crop&w=900&q=88',
+  'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?auto=format&fit=crop&w=900&q=88',
+  'https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=900&q=88',
+  'https://images.unsplash.com/photo-1551024709-8f23befc6f87?auto=format&fit=crop&w=900&q=88',
+  'https://images.unsplash.com/photo-1544145945-f90425340c7e?auto=format&fit=crop&w=900&q=88'
+];
 
-      <div className="menu-grid">
+function getMenuImage(item, index = 0) {
+  const name = String(item?.name || '').toLowerCase();
+  const category = String(item?.category || '').toLowerCase();
 
-        {items.map((item) => (
-          <div
-            className="menu-card"
-            key={item.id}
-          >
-            <div className="food-icon">
-              {item.category === "Food"
-                ? "🍽️"
-                : "🥤"}
-            </div>
+  const matches = [
+    ['jollof', FOOD_IMAGES[0]],
+    ['fried rice', FOOD_IMAGES[1]],
+    ['white rice', FOOD_IMAGES[1]],
+    ['rice', FOOD_IMAGES[1]],
+    ['grilled chicken', FOOD_IMAGES[2]],
+    ['chicken', FOOD_IMAGES[2]],
+    ['alfredo', FOOD_IMAGES[3]],
+    ['pasta', FOOD_IMAGES[3]],
+    ['spaghetti', FOOD_IMAGES[3]],
+    ['burger', FOOD_IMAGES[4]],
+    ['hamburger', FOOD_IMAGES[4]],
+    ['pizza', FOOD_IMAGES[5]],
+    ['fries', FOOD_IMAGES[6]],
+    ['chips', FOOD_IMAGES[6]],
+    ['salad', FOOD_IMAGES[7]],
+    ['coke', DRINK_IMAGES[0]],
+    ['cola', DRINK_IMAGES[0]],
+    ['sprite', DRINK_IMAGES[0]],
+    ['7up', DRINK_IMAGES[0]],
+    ['orange juice', DRINK_IMAGES[1]],
+    ['juice', DRINK_IMAGES[1]],
+    ['smoothie', DRINK_IMAGES[2]],
+    ['milkshake', DRINK_IMAGES[2]],
+    ['water', DRINK_IMAGES[3]],
+    ['latte', DRINK_IMAGES[4]],
+    ['coffee', DRINK_IMAGES[4]],
+    ['cappuccino', DRINK_IMAGES[4]],
+    ['espresso', DRINK_IMAGES[4]],
+    ['chapman', DRINK_IMAGES[5]],
+    ['mocktail', DRINK_IMAGES[5]],
+    ['cocktail', DRINK_IMAGES[5]]
+  ];
 
-            <div className="menu-card-content">
+  const matched = matches.find(([word]) => name.includes(word));
+  if (matched) return matched[1];
 
-              <h3>{item.name}</h3>
-
-              <p>
-                Preparation time:{" "}
-                {item.preparation_time} min
-              </p>
-
-              <div className="menu-card-footer">
-
-                <strong>
-                  ₦{Number(item.price).toLocaleString()}
-                </strong>
-
-                <button
-                  onClick={() => addToCart(item)}
-                >
-                  Add
-                </button>
-
-              </div>
-
-            </div>
-
-          </div>
-        ))}
-
-      </div>
-
-    </div>
-  );
+  const images = category === 'drink' ? DRINK_IMAGES : FOOD_IMAGES;
+  return images[index % images.length];
 }
 
+function MenuSection({ title, items, addToCart }) {
+  const isFood = title.toLowerCase() === 'food';
+  const fallback = isFood ? FOOD_IMAGES[0] : DRINK_IMAGES[0];
 
-/* =========================================
-   CART
-========================================= */
+  return (
+    <section className={`menu-section ${isFood ? 'food-section' : 'drink-section'}`}>
+      <div className="section-title-row">
+        <div>
+          <h2>{title}</h2>
+          <p>{isFood ? 'Freshly prepared meals' : 'Refreshing beverages'}</p>
+        </div>
+        <button className="view-all-button" type="button">
+          View all <span>→</span>
+        </button>
+      </div>
+
+      {items.length === 0 ? (
+        <div className="empty-menu">No {title.toLowerCase()} items found.</div>
+      ) : (
+        <div className="menu-grid">
+          {items.map((item, index) => (
+            <article className="menu-card" key={item.id}>
+              <div className="menu-image-wrap">
+                <img
+                  src={getMenuImage(item, index)}
+                  alt={item.name}
+                  className="menu-image"
+                  loading="eager"
+                  decoding="async"
+                  onError={(event) => {
+                    event.currentTarget.onerror = null;
+                    event.currentTarget.src = fallback;
+                  }}
+                />
+              </div>
+              <div className="menu-card-body">
+                <h3>{item.name}</h3>
+                <p className="prep-time">
+                  Preparation time: {item.preparation_time} min
+                </p>
+                <div className="menu-card-bottom">
+                  <strong className="menu-price">
+                    ₦{Number(item.price).toLocaleString()}
+                  </strong>
+                  <button
+                    className="add-button"
+                    type="button"
+                    onClick={() => addToCart(item)}
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
 
 function Cart({
   cart,
