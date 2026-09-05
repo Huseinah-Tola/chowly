@@ -60,7 +60,7 @@ main{min-height:calc(100vh - 76px)}
 .primary-button,.secondary-button{border-radius:9px;font-weight:800;transition:.18s ease}
 .primary-button{border:0;background:linear-gradient(135deg,#f0cf6e,#c99431);color:#2a180a;padding:11px 17px}
 .primary-button:hover{transform:translateY(-1px);filter:saturate(1.05)}
-.primary-button.full{width:100%}
+.primary-button.full,.secondary-button.full{width:100%}
 .secondary-button{border:1px solid var(--gold);background:#fffaf1;color:var(--brown);padding:10px 15px}
 .secondary-button:hover{background:#f4e5c9}
 
@@ -142,6 +142,7 @@ main{min-height:calc(100vh - 76px)}
 .order-sidebar{position:sticky;top:16px;display:flex;flex-direction:column;gap:15px}
 .order-history,.cart{border-radius:14px;box-shadow:var(--shadow)}
 .order-history{background:#fff;border:1px solid var(--line);padding:16px}
+.order-history .section-heading{display:flex;justify-content:space-between;gap:8px}
 .order-history .section-heading h2{margin:0;font-family:'Playfair Display',Georgia,serif;font-size:22px}
 .order-history .section-heading p{margin:3px 0 0;color:var(--muted);font-size:10px}
 .history-actions{display:flex;justify-content:flex-end;margin:3px 0 3px}
@@ -213,6 +214,49 @@ main{min-height:calc(100vh - 76px)}
 .star{border:0;background:transparent;color:#cfc4b9;font-size:24px;padding:1px 3px}.star.selected{color:var(--gold)}
 .payment-card{text-align:center;padding:32px}.payment-amount{margin:14px;font-family:'Playfair Display',Georgia,serif;font-size:40px}.pretend-label{color:#8a7b70;font-size:11px}.paid-card{text-align:center;padding:30px}
 
+
+/* ================= HISTORY / FEEDBACK / PAYMENT ================= */
+.history-toolbar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:7px 0 6px}
+.delete-history-button{border:1px solid #e2cfc0;background:#fff8f1;color:#8a4933;border-radius:7px;padding:6px 8px;font-size:9px;font-weight:800}
+.delete-history-button:hover{background:#f8e7dc;border-color:#c9957e}
+.delete-history-button:disabled{opacity:.55}
+.history-card-button{width:100%;display:block;text-align:left;color:inherit;font:inherit;cursor:pointer;transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease}
+.history-card-button:hover{transform:translateY(-1px);border-color:#d2b16d;box-shadow:0 6px 16px rgba(50,30,17,.08)}
+.history-card-button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.history-meta-row{display:flex;justify-content:space-between;gap:8px;margin-top:5px;padding-top:6px;border-top:1px solid #eee4d8;color:#8b7c70;font-size:9px}
+.history-meta-row strong{color:var(--brown)}
+.history-feedback-preview{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:7px;color:#9a6f2b;font-size:9px;font-weight:800}
+.history-feedback-preview span:last-child{color:#75665b}
+.order-page-actions{display:flex;justify-content:flex-start;margin-bottom:2px}
+.order-page-actions .secondary-button{margin:0}
+.saved-feedback{margin-top:15px;padding:14px;border-radius:10px;background:#fbf3e8;border:1px solid #ead9c5}
+.saved-feedback-heading{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.saved-stars{color:var(--gold);font-size:17px;letter-spacing:1px}
+.saved-feedback p{margin:9px 0 0;color:#5f5148;font-size:12px;line-height:1.6}
+.payment-status-card{display:flex;align-items:center;justify-content:space-between;gap:20px}
+.payment-status-card h3{margin:5px 0 4px;font-family:'Playfair Display',Georgia,serif;font-size:22px}
+.payment-status-card p{margin:0;color:var(--muted);font-size:11px;line-height:1.55}
+.payment-badge{display:inline-flex;align-items:center;justify-content:center;padding:7px 11px;border-radius:20px;font-size:10px;font-weight:800;white-space:nowrap}
+.payment-badge.paid{background:#dff1dc;color:#26702e}
+.payment-badge.unpaid{background:#f0e7dc;color:#6f5b4a}
+.waiter-card-feedback{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:11px 0;padding:10px;border-radius:9px;background:#faf4eb;border:1px solid #eee2d4}
+.waiter-card-feedback>div{display:flex;flex-direction:column;gap:4px}
+.feedback-label{color:#98887b;font-size:8px;text-transform:uppercase;letter-spacing:1px;font-weight:800}
+.waiter-card-feedback strong{font-size:11px;color:var(--brown)}
+.payment-text.paid{color:#2f7d3b}
+.payment-text.unpaid{color:#8b5e30}
+.complaint-preview{padding:10px 11px;margin:0 0 12px;border-left:3px solid var(--gold);background:#fbf4e9;border-radius:0 8px 8px 0}
+.complaint-preview span{display:block;color:#9b6d28;font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:1px}
+.complaint-preview p{margin:5px 0 0;color:#64564c;font-size:10px;line-height:1.5}
+.modal-section{margin-top:17px}
+.modal-feedback-box{margin-top:7px;padding:12px;border-radius:9px;background:#fbf4e9;border:1px solid #eadccc}
+.modal-rating strong{color:var(--gold);font-size:20px;letter-spacing:1px}
+.modal-feedback-box p{margin:7px 0 0;color:#66584d;font-size:11px;line-height:1.55}
+.modal-payment-row{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-top:7px;padding:12px;border-radius:9px;background:#faf4eb;border:1px solid #eadccc}
+.modal-payment-row strong{font-family:'Playfair Display',Georgia,serif;font-size:21px}
+.modal-payment-row p{margin:3px 0 0;color:var(--muted);font-size:10px}
+.modal-payment-row + .secondary-button{margin-top:8px}
+
 /* ================= WAITER ================= */
 .dashboard-header{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:22px}
 .dashboard-header h2{margin:5px 0;font-family:'Playfair Display',Georgia,serif;font-size:36px}
@@ -267,6 +311,10 @@ main{min-height:calc(100vh - 76px)}
   .order-modal-actions{grid-template-columns:1fr}
 }
 @media(max-width:650px){
+  .payment-status-card{align-items:flex-start;flex-direction:column}
+  .waiter-card-feedback{grid-template-columns:1fr}
+  .history-toolbar{align-items:flex-start}
+
   .header{padding:14px 5%;align-items:flex-start}
   .header p{display:none}
   .header h1{font-size:24px}
@@ -287,3 +335,5 @@ main{min-height:calc(100vh - 76px)}
   .section-title-row{align-items:flex-start}
   .section-title-row h2{font-size:24px}
 }
+
+.payment-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:flex-end}.pretend-payment-button{min-width:150px;padding:11px 16px;font-size:11px}.pretend-payment-button:disabled{opacity:.65;cursor:not-allowed}

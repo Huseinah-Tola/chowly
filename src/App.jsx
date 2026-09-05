@@ -14,6 +14,9 @@ import orangeJuiceImage from "./assets/menu/orange-juice.jpg";
 import strawberrySmoothieImage from "./assets/menu/strawberry-smoothie.jpg";
 import waterImage from "./assets/menu/water.jpg";
 import latteImage from "./assets/menu/latte.jpg";
+import cokePremiumImage from "./assets/menu/coke-premium.jpg";
+import fantaPremiumImage from "./assets/menu/fanta-premium.jpg";
+import spritePremiumImage from "./assets/menu/sprite-premium.jpg";
 import spriteImage from "./assets/menu/sprite.svg";
 import fantaImage from "./assets/menu/fanta.svg";
 import sevenUpImage from "./assets/menu/seven-up.svg";
@@ -23,11 +26,10 @@ import milkshakeImage from "./assets/menu/milkshake.svg";
 // Premium external product photography for the three branded soft drinks.
 // Local SVG assets remain as fallbacks if an external image ever fails.
 const PREMIUM_DRINK_IMAGES = {
-  // High-resolution product photography. Local SVG/JPG assets are kept as fallbacks.
-  coke: "https://images.unsplash.com/photo-1629019416996-712aa1bd87f4?fm=jpg&ixlib=rb-4.1.0&q=90&w=1600",
-  fanta: "https://commons.wikimedia.org/wiki/Special:Redirect/file/Fanta_Orange_Glass_Bottle.jpg",
-  sprite: "https://assets.nextorder.co/public/6d5db421-93f1-4d5d-8761-3f2a3af83c99",
-  chapman: "https://www.ikoyichapmans.co.uk/assets/img/cocktails/cocktails-1.png",
+  coke: cokePremiumImage,
+  fanta: fantaPremiumImage,
+  sprite: spritePremiumImage,
+  chapman: chapmanImage
 };
 
 // Premium chicken shawarma photography so it never falls back to the Jollof Rice image.
@@ -82,6 +84,7 @@ function Customer() {
   const [menu, setMenu] = useState([]);
   const [cart, setCart] = useState([]);
   const [order, setOrder] = useState(null);
+  const [viewingHistoryOrder, setViewingHistoryOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -98,28 +101,49 @@ function Customer() {
     loadOrderHistory();
   }, []);
 
-  async function loadOrderHistory() {
-  const { data, error } = await supabase
-    .from("orders")
-    .select(`
-      *,
-      order_items (
-        quantity,
-        price,
-        menu_items (
-          name
-        )
-      )
-    `)
-    .order("created_at", { ascending: false });
+  async function loadOrderById(orderId) {
+    const { data, error } = await supabase
+      .from("orders")
+      .select(`
+        *,
+        order_items (
+          *,
+          menu_items (name, category)
+        ),
+        chef:staff!orders_chef_id_fkey (name),
+        bartender:staff!orders_bartender_id_fkey (name)
+      `)
+      .eq("id", orderId)
+      .single();
 
-  if (error) {
-    console.error(error);
-    return;
+    if (error) {
+      console.error(error);
+      return null;
+    }
+
+    return data;
   }
 
-  setOrderHistory(data || []);
-}
+  async function loadOrderHistory() {
+    const { data, error } = await supabase
+      .from("orders")
+      .select(`
+        *,
+        order_items (
+          quantity,
+          price,
+          menu_items (name)
+        )
+      `)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    setOrderHistory(data || []);
+  }
 
   async function loadMenu() {
     const { data, error } = await supabase
@@ -133,7 +157,7 @@ function Customer() {
       console.error(error);
       setMessage("Could not load menu.");
     } else {
-      setMenu(data);
+      setMenu(data || []);
     }
 
     setLoading(false);
@@ -142,75 +166,51 @@ function Customer() {
   async function loadExistingOrder() {
     const savedOrderId = localStorage.getItem("chowlyOrderId");
 
-    if (!savedOrderId) {
-      return;
-    }
+    if (!savedOrderId) return;
 
-    const { data, error } = await supabase
-      .from("orders")
-      .select(`
-        *,
-        order_items (
-          *,
-          menu_items (
-            name,
-            category
-          )
-        ),
-        chef:staff!orders_chef_id_fkey (
-          name
-        ),
-        bartender:staff!orders_bartender_id_fkey (
-          name
-        )
-      `)
-      .eq("id", savedOrderId)
-      .single();
+    const data = await loadOrderById(savedOrderId);
 
-    if (!error && data) {
+    if (data) {
       setOrder(data);
-    } else if (error) {
+    } else {
       localStorage.removeItem("chowlyOrderId");
       setOrder(null);
     }
   }
 
+  async function openHistoryOrder(orderId) {
+    setMessage("");
+    const fullOrder = await loadOrderById(orderId);
+
+    if (!fullOrder) {
+      setMessage("Could not open this order. Please try again.");
+      return;
+    }
+
+    setViewingHistoryOrder(fullOrder);
+  }
+
+
   function addToCart(item) {
-    const existing = cart.find(
-      (cartItem) => cartItem.id === item.id
-    );
+    const existing = cart.find((cartItem) => cartItem.id === item.id);
 
     if (existing) {
       setCart(
         cart.map((cartItem) =>
           cartItem.id === item.id
-            ? {
-                ...cartItem,
-                quantity: cartItem.quantity + 1
-              }
+            ? { ...cartItem, quantity: cartItem.quantity + 1 }
             : cartItem
         )
       );
     } else {
-      setCart([
-        ...cart,
-        {
-          ...item,
-          quantity: 1
-        }
-      ]);
+      setCart([...cart, { ...item, quantity: 1 }]);
     }
   }
 
   function increaseQuantity(id) {
     setCart(
       cart.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              quantity: item.quantity + 1
-            }
-          : item
+        item.id === id ? { ...item, quantity: item.quantity + 1 } : item
       )
     );
   }
@@ -219,49 +219,34 @@ function Customer() {
     setCart(
       cart
         .map((item) =>
-          item.id === id
-            ? {
-                ...item,
-                quantity: item.quantity - 1
-              }
-            : item
+          item.id === id ? { ...item, quantity: item.quantity - 1 } : item
         )
         .filter((item) => item.quantity > 0)
     );
   }
 
   function removeFromCart(id) {
-    setCart(
-      cart.filter((item) => item.id !== id)
-    );
+    setCart(cart.filter((item) => item.id !== id));
   }
 
   function getTotal() {
     return cart.reduce(
-      (total, item) =>
-        total + item.price * item.quantity,
+      (total, item) => total + Number(item.price) * item.quantity,
       0
     );
   }
 
   function getWaitingTime() {
-    if (cart.length === 0) {
-      return 0;
-    }
-
-    return Math.max(
-      ...cart.map(
-        (item) => item.preparation_time
-      )
-    );
+    if (cart.length === 0) return 0;
+    return Math.max(...cart.map((item) => Number(item.preparation_time) || 0));
   }
 
   async function placeOrder() {
-     if (!tableNumber) {
-    setMessage("Please select your table number.");
-    return;
-  }
-    // existing order code...
+    if (!tableNumber) {
+      setMessage("Please select your table number.");
+      return;
+    }
+
     if (cart.length === 0) {
       setMessage("Please add something to your order.");
       return;
@@ -272,24 +257,21 @@ function Customer() {
     const total = getTotal();
     const waitingTime = getWaitingTime();
 
-    const { data: newOrder, error: orderError } =
-      await supabase
-        .from("orders")
-        .insert({
-          status: "pending",
-          total_amount: total,
-          waiting_time: waitingTime,
-          payment_status: "unpaid",
-          table_number: Number(tableNumber)
-        })
-        .select()
-        .single();
+    const { data: newOrder, error: orderError } = await supabase
+      .from("orders")
+      .insert({
+        status: "pending",
+        total_amount: total,
+        waiting_time: waitingTime,
+        payment_status: "unpaid",
+        table_number: Number(tableNumber)
+      })
+      .select()
+      .single();
 
     if (orderError) {
       console.error(orderError);
-      setMessage(
-        "There was a problem creating the order."
-      );
+      setMessage("There was a problem creating the order.");
       return;
     }
 
@@ -300,10 +282,9 @@ function Customer() {
       price: item.price
     }));
 
-    const { error: itemsError } =
-      await supabase
-        .from("order_items")
-        .insert(orderItems);
+    const { error: itemsError } = await supabase
+      .from("order_items")
+      .insert(orderItems);
 
     if (itemsError) {
       console.error(itemsError);
@@ -312,105 +293,96 @@ function Customer() {
       return;
     }
 
-    localStorage.setItem(
-      "chowlyOrderId",
-      newOrder.id
-    );
-
+    localStorage.setItem("chowlyOrderId", newOrder.id);
     setCart([]);
     setMessage("");
     await loadExistingOrder();
+    await loadOrderHistory();
+  }
+
+  function backToMenu() {
+    localStorage.removeItem("chowlyOrderId");
+    setOrder(null);
+    setViewingHistoryOrder(null);
+    setCart([]);
+    setMessage("");
+    loadOrderHistory();
+  }
+
+  function reloadCurrentOrder() {
+    if (order?.id) return loadOrderById(order.id).then((data) => data && setOrder(data));
+  }
+
+  function reloadHistoryOrder() {
+    if (viewingHistoryOrder?.id) {
+      return loadOrderById(viewingHistoryOrder.id).then((data) => data && setViewingHistoryOrder(data));
+    }
   }
 
   if (loading) {
     return (
       <section className="section">
-        <div className="loading">
-          Loading Chowly menu...
-        </div>
+        <div className="loading">Loading Chowly menu...</div>
       </section>
     );
   }
 
-  if (order) {
-    function backToMenu() {
-      localStorage.removeItem("chowlyOrderId");
-      setOrder(null);
-      setCart([]);
-      setMessage("");
-    }
+  if (viewingHistoryOrder) {
+    return (
+      <CustomerOrder
+        order={viewingHistoryOrder}
+        reloadOrder={reloadHistoryOrder}
+        backToMenu={() => setViewingHistoryOrder(null)}
+        isHistoryView={true}
+      />
+    );
+  }
 
+  if (order) {
     return (
       <CustomerOrder
         order={order}
-        reloadOrder={loadExistingOrder}
+        reloadOrder={reloadCurrentOrder}
         backToMenu={backToMenu}
+        isHistoryView={false}
       />
     );
   }
 
   const filteredMenu = menu.filter((item) => {
-  const matchesSearch = item.name
-    .toLowerCase()
-    .includes(searchTerm.toLowerCase());
+    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = category === "All" || item.category === category;
+    return matchesSearch && matchesCategory;
+  });
 
-  const matchesCategory =
-    category === "All" ||
-    item.category === category;
-
-  return matchesSearch && matchesCategory;
-});
-
-const food = filteredMenu.filter(
-  (item) => item.category === "Food"
-);
-
-const drinks = filteredMenu.filter(
-  (item) => item.category === "Drink"
-);
+  const food = filteredMenu.filter((item) => item.category === "Food");
+  const drinks = filteredMenu.filter((item) => item.category === "Drink");
 
   return (
     <section className="section">
-
-      <div className="hero" style={{ backgroundImage: `linear-gradient(90deg, rgba(249,241,227,.98) 0%, rgba(249,241,227,.92) 44%, rgba(249,241,227,.28) 74%, rgba(249,241,227,.04) 100%), url(${heroImage})` }}>
+      <div
+        className="hero"
+        style={{
+          backgroundImage: `linear-gradient(90deg, rgba(249,241,227,.98) 0%, rgba(249,241,227,.92) 44%, rgba(249,241,227,.28) 74%, rgba(249,241,227,.04) 100%), url(${heroImage})`
+        }}
+      >
         <div>
-          <span className="eyebrow">
-            WELCOME TO CHOWLY
-          </span>
-
-          <h2>
-            Good food.
-            <br />
-            Less waiting.
-          </h2>
-
-          <p>
-            Browse our menu, place your order and
-            track it from preparation to payment.
-          </p>
+          <span className="eyebrow">WELCOME TO CHOWLY</span>
+          <h2>Good food.<br />Less waiting.</h2>
+          <p>Browse our menu, place your order and track it from preparation to payment.</p>
         </div>
       </div>
 
-      {message && (
-        <div className="message">
-          {message}
-        </div>
-      )}
-      
+      {message && <div className="message">{message}</div>}
+
       <div className="customer-layout">
         <div className="menu-column">
           <div className="table-selector">
             <label htmlFor="tableNumber">Table Number</label>
-            <select
-              id="tableNumber"
-              value={tableNumber}
-              onChange={(event) => setTableNumber(event.target.value)}
-            >
+            <select id="tableNumber" value={tableNumber} onChange={(event) => setTableNumber(event.target.value)}>
               <option value="">Select your table</option>
               {Array.from({ length: 20 }, (_, index) => (
-                <option key={index + 1} value={index + 1}>
-                  Table {index + 1}
-                </option>
+                <option key={index + 1} value={index + 1}>Table {index + 1}</option>
               ))}
             </select>
           </div>
@@ -437,84 +409,79 @@ const drinks = filteredMenu.filter(
           </div>
 
           <div className="menu-list">
-            <MenuSection
-              title="Food"
-              items={food}
-              addToCart={addToCart}
-              showAll={showAllFood}
-              onToggle={() => setShowAllFood((value) => !value)}
-            />
-            <MenuSection
-              title="Drinks"
-              items={drinks}
-              addToCart={addToCart}
-              showAll={showAllDrinks}
-              onToggle={() => setShowAllDrinks((value) => !value)}
-            />
+            <MenuSection title="Food" items={food} addToCart={addToCart} showAll={showAllFood} onToggle={() => setShowAllFood((value) => !value)} />
+            <MenuSection title="Drinks" items={drinks} addToCart={addToCart} showAll={showAllDrinks} onToggle={() => setShowAllDrinks((value) => !value)} />
           </div>
         </div>
 
         <aside className="order-sidebar">
           <section className="order-history">
             <div className="section-heading">
-              <h2>Order History</h2>
-              <p>Your previous Chowly orders</p>
-            </div>
-            {orderHistory.length === 0 ? (
-              <div className="empty-history">
-                <p>No previous orders yet.</p>
+              <div>
+                <h2>Order History</h2>
+                <p>Click an order to see its details, feedback and payment.</p>
               </div>
+            </div>
+
+            {orderHistory.length === 0 ? (
+              <div className="empty-history"><p>No previous orders yet.</p></div>
             ) : (
               <>
-                <div className="history-actions">
+                <div className="history-toolbar">
                   <button
                     type="button"
                     className="view-all-button"
                     onClick={() => setShowAllHistory((value) => !value)}
                   >
-                    {showAllHistory ? "Show recent" : "View all"} <span>→</span>
+                    {showAllHistory ? "Show recent" : "View all"} <span>{showAllHistory ? "↑" : "→"}</span>
                   </button>
                 </div>
+
                 <div className="history-list">
-                {orderHistory
-                  .filter((historyOrder) => !order || historyOrder.id !== order.id)
-                  .slice(0, showAllHistory ? undefined : 3)
-                  .map((historyOrder) => (
-                  <div className="history-card" key={historyOrder.id}>
-                    <div className="history-card-top">
-                      <div>
-                        <h3>Order #{historyOrder.id}</h3>
-                        <p>{new Date(historyOrder.created_at).toLocaleString()}</p>
-                      </div>
-                      <span className={`history-status ${historyOrder.status}`}>
-                        {historyOrder.status}
-                      </span>
-                    </div>
-                    <div className="history-items">
-                      {historyOrder.order_items?.map((item, index) => (
-                        <div
-                          className="history-item"
-                          key={`${historyOrder.id}-${item.menu_items?.name || index}`}
-                        >
-                          <span>{item.quantity} × {item.menu_items?.name}</span>
-                          <span>
-                            ₦{(Number(item.price) * Number(item.quantity)).toLocaleString()}
-                          </span>
+                  {orderHistory
+                    .slice(0, showAllHistory ? undefined : 3)
+                    .map((historyOrder) => (
+                      <button
+                        className="history-card history-card-button"
+                        key={historyOrder.id}
+                        type="button"
+                        onClick={() => openHistoryOrder(historyOrder.id)}
+                      >
+                        <div className="history-card-top">
+                          <div>
+                            <h3>Order #{historyOrder.id}</h3>
+                            <p>{new Date(historyOrder.created_at).toLocaleString()}</p>
+                          </div>
+                          <span className={`history-status ${historyOrder.status}`}>{historyOrder.status}</span>
                         </div>
-                      ))}
-                    </div>
-                    <div className="history-total">
-                      <strong>Total</strong>
-                      <strong>₦{Number(historyOrder.total_amount).toLocaleString()}</strong>
-                    </div>
-                    <div className="history-payment">
-                      Payment:{' '}
-                      <strong>
-                        {historyOrder.payment_status === 'paid' ? 'Paid' : 'Unpaid'}
-                      </strong>
-                    </div>
-                  </div>
-                ))}
+
+                        <div className="history-items">
+                          {historyOrder.order_items?.map((item, index) => (
+                            <div className="history-item" key={`${historyOrder.id}-${item.menu_items?.name || index}`}>
+                              <span>{item.quantity} × {item.menu_items?.name}</span>
+                              <span>₦{(Number(item.price) * Number(item.quantity)).toLocaleString()}</span>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="history-total">
+                          <strong>Total</strong>
+                          <strong>₦{Number(historyOrder.total_amount).toLocaleString()}</strong>
+                        </div>
+
+                        <div className="history-meta-row">
+                          <span>Payment</span>
+                          <strong>{historyOrder.payment_status === "paid" ? "Paid" : "Unpaid"}</strong>
+                        </div>
+
+                        <div className="history-feedback-preview">
+                          <span>
+                            {historyOrder.rating ? `${"★".repeat(Number(historyOrder.rating))}${"☆".repeat(5 - Number(historyOrder.rating))}` : "No rating yet"}
+                          </span>
+                          <span>{historyOrder.complaint ? "Feedback submitted" : "View order →"}</span>
+                        </div>
+                      </button>
+                    ))}
                 </div>
               </>
             )}
@@ -736,6 +703,10 @@ function Cart({
                   alt={item.name}
                   className="cart-item-image"
                   loading="lazy"
+                  onError={(event) => {
+                    event.currentTarget.onerror = null;
+                    event.currentTarget.src = categoryFallbackImage(item);
+                  }}
                 />
 
                 <div className="cart-item-info">
@@ -788,42 +759,33 @@ function Cart({
 function CustomerOrder({
   order,
   reloadOrder,
-  backToMenu
+  backToMenu,
+  isHistoryView = false
 }) {
-  const [complaint, setComplaint] =
-    useState(order.complaint || "");
-
-  const [rating, setRating] =
-    useState(order.rating || 0);
+  const [complaint, setComplaint] = useState(order.complaint || "");
+  const [rating, setRating] = useState(Number(order.rating) || 0);
+  const [savingFeedback, setSavingFeedback] = useState(false);
+  const [savingPayment, setSavingPayment] = useState(false);
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
     setComplaint(order.complaint || "");
-    setRating(order.rating || 0);
+    setRating(Number(order.rating) || 0);
   }, [order.complaint, order.rating]);
 
-  const [savingFeedback, setSavingFeedback] =
-    useState(false);
-
-  const [paying, setPaying] =
-    useState(false);
-
-  const [message, setMessage] =
-    useState("");
-
   async function submitFeedback() {
-    if (!complaint && !rating) {
-      setMessage(
-        "Please provide a complaint or rating."
-      );
+    if (!complaint.trim() && !rating) {
+      setMessage("Please provide a complaint or rating.");
       return;
     }
 
     setSavingFeedback(true);
+    setMessage("");
 
     const { error } = await supabase
       .from("orders")
       .update({
-        complaint: complaint || null,
+        complaint: complaint.trim() || null,
         rating: rating || null
       })
       .eq("id", order.id);
@@ -832,44 +794,34 @@ function CustomerOrder({
 
     if (error) {
       console.error(error);
-      setMessage(
-        "Could not save your feedback."
-      );
+      setMessage("Could not save your feedback.");
       return;
     }
 
-    setMessage(
-      "Your feedback has been saved."
-    );
-
+    setMessage("Your feedback has been saved and is visible below.");
     await reloadOrder();
   }
 
-  async function makePayment() {
-    setPaying(true);
-    setMessage("Processing pretend payment...");
+  async function makePretendPayment() {
+    if (order.payment_status === "paid") return;
+
+    setSavingPayment(true);
+    setMessage("");
 
     const { error } = await supabase
       .from("orders")
-      .update({
-        payment_status: "paid"
-      })
+      .update({ payment_status: "paid" })
       .eq("id", order.id);
 
-    setPaying(false);
+    setSavingPayment(false);
 
     if (error) {
       console.error(error);
-      setMessage(
-        "Payment could not be recorded."
-      );
+      setMessage("Could not record the demo payment.");
       return;
     }
 
-    setMessage(
-      "Pretend payment successful!"
-    );
-
+    setMessage("Demo payment recorded successfully.");
     await reloadOrder();
   }
 
@@ -881,317 +833,141 @@ function CustomerOrder({
 
   return (
     <section className="section">
-
       <div className="order-page">
+        <div className="order-page-actions">
+          <button className="secondary-button" type="button" onClick={backToMenu}>
+            {isHistoryView ? "← Back to Order History" : "← Back to Menu"}
+          </button>
+        </div>
+
+        {message && <div className="message">{message}</div>}
 
         <div className="order-success">
           <span className="success-icon">✓</span>
-
-          <span className="eyebrow">
-            ORDER CONFIRMED
-          </span>
-
-          <h2>
-            Order #{order.id}
-          </h2>
-          {order.table_number && (
-            <p className="table-badge">
-              Table {order.table_number}
-            </p>
-)}
-
-          <p>
-            Your order has been sent to the
-            restaurant.
-          </p>
+          <span className="eyebrow">ORDER CONFIRMATION</span>
+          <h2>Order #{order.id}</h2>
+          {order.table_number && <p className="table-badge">Table {order.table_number}</p>}
+          <p>{isHistoryView ? "Here are the details from this previous Chowly order." : "Your order has been sent to the restaurant."}</p>
         </div>
 
-        <button
-          className="secondary-button"
-          onClick={backToMenu}
-        >
-          Back to Menu
-        </button>
-
-        {message && (
-          <div className="message">
-            {message}
-          </div>
-        )}
-
         <div className="order-status-card">
-
           <div className="status-header">
             <div>
-              <span className="eyebrow">
-                CURRENT STATUS
-              </span>
-
-              <h3>
-                {statusLabel[order.status]}
-              </h3>
+              <span className="eyebrow">CURRENT STATUS</span>
+              <h3>{statusLabel[order.status] || order.status}</h3>
             </div>
-
-            <span
-              className={`status ${order.status}`}
-            >
-              {order.status}
-            </span>
+            <span className={`status ${order.status}`}>{order.status}</span>
           </div>
 
           <div className="progress">
-
-            <div
-              className={
-                order.status === "pending" ||
-                order.status === "preparing" ||
-                order.status === "served"
-                  ? "progress-step complete"
-                  : "progress-step"
-              }
-            >
-              <span>1</span>
-              Order received
+            <div className={`progress-step ${["pending", "preparing", "served"].includes(order.status) ? "complete" : ""}`}>
+              <span>1</span>Order received
             </div>
-
-            <div
-              className={
-                order.status === "preparing" ||
-                order.status === "served"
-                  ? "progress-step complete"
-                  : "progress-step"
-              }
-            >
-              <span>2</span>
-              Preparing
+            <div className={`progress-step ${["preparing", "served"].includes(order.status) ? "complete" : ""}`}>
+              <span>2</span>Preparing
             </div>
-
-            <div
-              className={
-                order.status === "served"
-                  ? "progress-step complete"
-                  : "progress-step"
-              }
-            >
-              <span>3</span>
-              Served
+            <div className={`progress-step ${order.status === "served" ? "complete" : ""}`}>
+              <span>3</span>Served
             </div>
-
           </div>
-
         </div>
 
         <div className="order-details">
-
           <div className="card">
-
-            <div className="section-heading">
-              <h3>Order Details</h3>
-            </div>
-
+            <div className="section-heading"><h3>Order Details</h3></div>
             {order.order_items?.map((item) => (
-              <div
-                className="detail-row"
-                key={item.id}
-              >
-                <span>
-                  {item.menu_items?.name}
-                  {" × "}
-                  {item.quantity}
-                </span>
-
-                <strong>
-                  ₦
-                  {Number(
-                    item.price * item.quantity
-                  ).toLocaleString()}
-                </strong>
+              <div className="detail-row" key={item.id}>
+                <span>{item.menu_items?.name} × {item.quantity}</span>
+                <strong>₦{(Number(item.price) * Number(item.quantity)).toLocaleString()}</strong>
               </div>
             ))}
-
             <div className="total-row">
               <span>Total</span>
-
-              <strong>
-                ₦
-                {Number(
-                  order.total_amount
-                ).toLocaleString()}
-              </strong>
+              <strong>₦{Number(order.total_amount).toLocaleString()}</strong>
             </div>
-
           </div>
-
 
           <div className="card">
-
-            <span className="eyebrow">
-              ESTIMATED WAIT
-            </span>
-
-            <div className="waiting-time">
-              {order.waiting_time}
-              <span>min</span>
-            </div>
-
+            <span className="eyebrow">ESTIMATED WAIT</span>
+            <div className="waiting-time">{order.waiting_time}<span>min</span></div>
             <div className="waiting-card">
               <span className="waiting-icon">⏱</span>
-
-              <div>
-                <strong>Estimated waiting time</strong>
-                <p>
-                  About {order.waiting_time} minutes
-                </p>
-              </div>
-</div>
-
-
-
-            {order.chef && (
-              <p>
-                Chef: {order.chef.name}
-              </p>
-            )}
-
-            {order.bartender && (
-              <p>
-                Bartender: {order.bartender.name}
-              </p>
-            )}
-
+              <div><strong>Estimated waiting time</strong><p>About {order.waiting_time} minutes</p></div>
+            </div>
+            {order.chef && <p>Chef: {order.chef.name}</p>}
+            {order.bartender && <p>Bartender: {order.bartender.name}</p>}
           </div>
-
         </div>
 
-
         <div className="card feedback-card">
+          <span className="eyebrow">FEEDBACK & RATING</span>
+          <h3>How was your Chowly experience?</h3>
 
-            <span className="eyebrow">
-              HAVING A PROBLEM?
-            </span>
-
-            <h3>
-              Tell us if your order is delayed
-            </h3>
-
-            <textarea
-              value={complaint}
-              onChange={(event) =>
-                setComplaint(event.target.value)
-              }
-              placeholder="Describe the problem..."
-            />
-
-            <div className="rating">
-
-              <span>Rating</span>
-
-              <div>
-                {[1, 2, 3, 4, 5].map(
-                  (number) => (
-                    <button
-                      key={number}
-                      className={
-                        number <= rating
-                          ? "star selected"
-                          : "star"
-                      }
-                      onClick={() =>
-                        setRating(number)
-                      }
-                    >
-                      ★
-                    </button>
-                  )
-                )}
-              </div>
-
+          <div className="rating">
+            <span>Your rating</span>
+            <div aria-label="Rating from 1 to 5 stars">
+              {[1, 2, 3, 4, 5].map((number) => (
+                <button
+                  key={number}
+                  type="button"
+                  className={number <= rating ? "star selected" : "star"}
+                  onClick={() => setRating(number)}
+                  aria-label={`${number} star${number > 1 ? "s" : ""}`}
+                >★</button>
+              ))}
             </div>
-
-            <button
-              className="secondary-button"
-              onClick={submitFeedback}
-              disabled={savingFeedback}
-            >
-              {savingFeedback
-                ? "Saving..."
-                : "Submit Feedback"}
-            </button>
-
           </div>
 
-        {order.status === "served" &&
-          order.payment_status === "unpaid" && (
-            <div className="payment-card">
+          <textarea
+            value={complaint}
+            onChange={(event) => setComplaint(event.target.value)}
+            placeholder="Tell us what went well or describe any problem..."
+          />
 
-              <span className="eyebrow">
-                BEFORE YOU LEAVE
-              </span>
+          <button className="primary-button" type="button" onClick={submitFeedback} disabled={savingFeedback}>
+            {savingFeedback ? "Saving..." : "Submit Feedback"}
+          </button>
 
-              <h2>
-                Ready to pay?
-              </h2>
-
-              <p>
-                Your order has been served.
-                Complete your payment before
-                leaving the restaurant.
-              </p>
-
-              <div className="payment-amount">
-                ₦
-                {Number(
-                  order.total_amount
-                ).toLocaleString()}
+          {(order.rating || order.complaint) && (
+            <div className="saved-feedback">
+              <div className="saved-feedback-heading">
+                <span className="eyebrow">YOUR SAVED FEEDBACK</span>
+                <span className="saved-stars">
+                  {order.rating ? `${"★".repeat(Number(order.rating))}${"☆".repeat(5 - Number(order.rating))}` : "No rating"}
+                </span>
               </div>
-
-              <p className="pretend-label">
-                This is a pretend payment.
-                No real money will be charged.
-              </p>
-
-              <button
-                className="primary-button"
-                onClick={makePayment}
-                disabled={paying}
-              >
-                {paying
-                  ? "Processing..."
-                  : "Confirm Pretend Payment"}
-              </button>
-
+              {order.complaint ? <p>{order.complaint}</p> : <p>No written feedback was submitted.</p>}
             </div>
           )}
+        </div>
 
-
-        {order.payment_status === "paid" && (
-          <div className="paid-card">
-
-            <div className="success-icon">
-              ✓
-            </div>
-
-            <span className="eyebrow">
-              PAYMENT COMPLETE
-            </span>
-
-            <h2>
-              ₦
-              {Number(
-                order.total_amount
-              ).toLocaleString()}
-            </h2>
-
+        <div className="card payment-status-card">
+          <div>
+            <span className="eyebrow">PAYMENT</span>
+            <h3>{order.payment_status === "paid" ? "Payment completed" : "Payment pending"}</h3>
             <p>
-              Your pretend payment has been
-              successfully recorded.
+              {order.payment_status === "paid"
+                ? "This order has been recorded as paid by the restaurant."
+                : "Payment has not yet been recorded for this order."}
             </p>
-
           </div>
-        )}
-
+          <div className="payment-actions">
+            <span className={`payment-badge ${order.payment_status === "paid" ? "paid" : "unpaid"}`}>
+              {order.payment_status === "paid" ? "Paid" : "Unpaid"}
+            </span>
+            {order.payment_status !== "paid" && (
+              <button
+                className="primary-button pretend-payment-button"
+                type="button"
+                onClick={makePretendPayment}
+                disabled={savingPayment}
+              >
+                {savingPayment ? "Processing..." : "Pretend Payment"}
+              </button>
+            )}
+          </div>
+        </div>
       </div>
-
     </section>
   );
 }
@@ -1244,12 +1020,7 @@ function Waiter() {
       .select("*")
       .order("name");
 
-    if (staffError) {
-      console.error(staffError);
-    } else {
-      setStaff(staffData || []);
-    }
-
+    if (!staffError) setStaff(staffData || []);
     setLoading(false);
   }
 
@@ -1263,17 +1034,12 @@ function Waiter() {
   async function saveAssignments() {
     if (!selectedOrder) return;
 
-    if (!chefId || !bartenderId) {
-      setMessage("Please select both a chef and bartender.");
-      return;
-    }
-
     setSaving(true);
     const { error } = await supabase
       .from("orders")
       .update({
-        chef_id: Number(chefId),
-        bartender_id: Number(bartenderId)
+        chef_id: chefId ? Number(chefId) : null,
+        bartender_id: bartenderId ? Number(bartenderId) : null
       })
       .eq("id", selectedOrder.id);
     setSaving(false);
@@ -1284,30 +1050,27 @@ function Waiter() {
       return;
     }
 
-    setMessage(`Staff assigned to order #${selectedOrder.id}.`);
+    setMessage(`Staff assignment saved for order #${selectedOrder.id}.`);
     await loadData();
     setSelectedOrder((current) => current ? {
       ...current,
-      chef_id: Number(chefId),
-      bartender_id: Number(bartenderId)
+      chef_id: chefId ? Number(chefId) : null,
+      bartender_id: bartenderId ? Number(bartenderId) : null,
+      chef: chefs.find((person) => String(person.id) === String(chefId)) || null,
+      bartender: bartenders.find((person) => String(person.id) === String(bartenderId)) || null
     } : null);
   }
 
   async function updateOrderStatus(newStatus) {
     if (!selectedOrder) return;
 
-    if (!chefId || !bartenderId) {
-      setMessage("Please select both a chef and bartender before changing the order status.");
-      return;
-    }
-
     setSaving(true);
     const { error } = await supabase
       .from("orders")
       .update({
         status: newStatus,
-        chef_id: Number(chefId),
-        bartender_id: Number(bartenderId)
+        chef_id: chefId ? Number(chefId) : null,
+        bartender_id: bartenderId ? Number(bartenderId) : null
       })
       .eq("id", selectedOrder.id);
     setSaving(false);
@@ -1323,13 +1086,29 @@ function Waiter() {
     await loadData();
   }
 
-  const chefs = staff.filter(
-    (person) => String(person.role || "").toLowerCase() === "chef"
-  );
+  async function recordPayment() {
+    if (!selectedOrder || selectedOrder.payment_status === "paid") return;
 
-  const bartenders = staff.filter(
-    (person) => String(person.role || "").toLowerCase() === "bartender"
-  );
+    setSaving(true);
+    const { error } = await supabase
+      .from("orders")
+      .update({ payment_status: "paid" })
+      .eq("id", selectedOrder.id);
+    setSaving(false);
+
+    if (error) {
+      console.error(error);
+      setMessage("Could not record the payment.");
+      return;
+    }
+
+    setSelectedOrder((current) => current ? { ...current, payment_status: "paid" } : null);
+    setMessage(`Payment recorded for order #${selectedOrder.id}.`);
+    await loadData();
+  }
+
+  const chefs = staff.filter((person) => String(person.role || "").toLowerCase() === "chef");
+  const bartenders = staff.filter((person) => String(person.role || "").toLowerCase() === "bartender");
 
   const counts = {
     all: orders.length,
@@ -1338,16 +1117,10 @@ function Waiter() {
     served: orders.filter((order) => order.status === "served").length
   };
 
-  const visibleOrders = filter === "all"
-    ? orders
-    : orders.filter((order) => order.status === filter);
+  const visibleOrders = filter === "all" ? orders : orders.filter((order) => order.status === filter);
 
   if (loading) {
-    return (
-      <section className="section">
-        <div className="loading">Loading waiter dashboard...</div>
-      </section>
-    );
+    return <section className="section"><div className="loading">Loading waiter dashboard...</div></section>;
   }
 
   return (
@@ -1358,27 +1131,14 @@ function Waiter() {
           <h2>Active Orders</h2>
           <p>Manage and track all customer orders in real time.</p>
         </div>
-        <div className="dashboard-stat">
-          <strong>{orders.length}</strong>
-          <span>Total Orders</span>
-        </div>
+        <div className="dashboard-stat"><strong>{orders.length}</strong><span>Total Orders</span></div>
       </div>
 
       {message && <div className="message">{message}</div>}
 
       <div className="order-filters" role="tablist" aria-label="Order status filters">
-        {[
-          ["all", "All"],
-          ["pending", "Pending"],
-          ["preparing", "Preparing"],
-          ["served", "Served"]
-        ].map(([value, label]) => (
-          <button
-            key={value}
-            type="button"
-            className={filter === value ? "active" : ""}
-            onClick={() => setFilter(value)}
-          >
+        {[['all', 'All'], ['pending', 'Pending'], ['preparing', 'Preparing'], ['served', 'Served']].map(([value, label]) => (
+          <button key={value} type="button" className={filter === value ? "active" : ""} onClick={() => setFilter(value)}>
             {label} <span>({counts[value]})</span>
           </button>
         ))}
@@ -1387,53 +1147,62 @@ function Waiter() {
       <div className="orders-list">
         {visibleOrders.length === 0 ? (
           <div className="empty-dashboard">
-            <h3>No {filter === "all" ? "orders" : filter + " orders"} found</h3>
+            <h3>No {filter === "all" ? "orders" : `${filter} orders`} found</h3>
             <p>New customer orders will appear here automatically.</p>
           </div>
-        ) : (
-          visibleOrders.map((order) => (
-            <article className="order-card" key={order.id}>
-              <div className="order-card-top">
-                <div>
-                  <span className="eyebrow">ORDER #{order.id}</span>
-                  <h3>{order.table_number ? `Table ${order.table_number}` : "Table not selected"}</h3>
-                  <p className="order-date">
-                    {new Date(order.created_at).toLocaleString()}
-                  </p>
+        ) : visibleOrders.map((order) => (
+          <article className="order-card" key={order.id}>
+            <div className="order-card-top">
+              <div>
+                <span className="eyebrow">ORDER #{order.id}</span>
+                <h3>{order.table_number ? `Table ${order.table_number}` : "Table not selected"}</h3>
+                <p className="order-date">{new Date(order.created_at).toLocaleString()}</p>
+              </div>
+              <span className={`status ${order.status}`}>{order.status}</span>
+            </div>
+
+            <div className="order-items">
+              {order.order_items?.map((item) => (
+                <div className="order-item-line" key={item.id}>
+                  <span>{item.quantity} × {item.menu_items?.name || "Menu item"}</span>
+                  <span>₦{(Number(item.price) * Number(item.quantity)).toLocaleString()}</span>
                 </div>
-                <span className={`status ${order.status}`}>{order.status}</span>
-              </div>
+              ))}
+            </div>
 
-              <div className="order-items">
-                {order.order_items?.map((item) => (
-                  <div className="order-item-line" key={item.id}>
-                    <span>{item.quantity} × {item.menu_items?.name || "Menu item"}</span>
-                    <span>₦{(Number(item.price) * Number(item.quantity)).toLocaleString()}</span>
-                  </div>
-                ))}
-              </div>
+            <div className="order-total-line">
+              <strong>Total</strong>
+              <strong>₦{Number(order.total_amount).toLocaleString()}</strong>
+            </div>
 
-              <div className="order-total-line">
-                <strong>Total</strong>
-                <strong>₦{Number(order.total_amount).toLocaleString()}</strong>
-              </div>
+            <div className="assigned-staff">
+              <span>Chef: {order.chef?.name || "—"}</span>
+              <span>Bartender: {order.bartender?.name || "—"}</span>
+            </div>
 
-              <div className="assigned-staff">
-                <span>Chef: {order.chef?.name || "—"}</span>
-                <span>Bartender: {order.bartender?.name || "—"}</span>
+            <div className="waiter-card-feedback">
+              <div>
+                <span className="feedback-label">Rating</span>
+                <strong>{order.rating ? `${"★".repeat(Number(order.rating))}${"☆".repeat(5 - Number(order.rating))}` : "Not rated"}</strong>
               </div>
+              <div>
+                <span className="feedback-label">Payment</span>
+                <strong className={order.payment_status === "paid" ? "payment-text paid" : "payment-text unpaid"}>{order.payment_status === "paid" ? "Paid" : "Unpaid"}</strong>
+              </div>
+            </div>
 
-              <button
-                type="button"
-                className="add-button waiter-open-button"
-                onClick={() => openOrder(order)}
-              >
-                <span aria-hidden="true">🍴</span>
-                Open Order
-              </button>
-            </article>
-          ))
-        )}
+            {order.complaint && (
+              <div className="complaint-preview">
+                <span>Customer feedback</span>
+                <p>“{order.complaint}”</p>
+              </div>
+            )}
+
+            <button type="button" className="add-button waiter-open-button" onClick={() => openOrder(order)}>
+              <span aria-hidden="true">🍴</span> Open Order
+            </button>
+          </article>
+        ))}
       </div>
 
       {selectedOrder && (
@@ -1441,12 +1210,7 @@ function Waiter() {
           if (event.target === event.currentTarget && !saving) setSelectedOrder(null);
         }}>
           <div className="order-modal" role="dialog" aria-modal="true" aria-labelledby="order-modal-title">
-            <button
-              className="modal-close"
-              type="button"
-              onClick={() => !saving && setSelectedOrder(null)}
-              aria-label="Close order"
-            >×</button>
+            <button className="modal-close" type="button" onClick={() => !saving && setSelectedOrder(null)} aria-label="Close order">×</button>
 
             <span className="eyebrow">ORDER #{selectedOrder.id}</span>
             <h2 id="order-modal-title">Manage Order</h2>
@@ -1465,20 +1229,44 @@ function Waiter() {
               ))}
             </div>
 
+            <div className="modal-section">
+              <span className="eyebrow">CUSTOMER FEEDBACK</span>
+              <div className="modal-feedback-box">
+                <div className="modal-rating">
+                  <strong>{selectedOrder.rating ? `${"★".repeat(Number(selectedOrder.rating))}${"☆".repeat(5 - Number(selectedOrder.rating))}` : "Not rated yet"}</strong>
+                </div>
+                <p>{selectedOrder.complaint || "No written feedback was submitted."}</p>
+              </div>
+            </div>
+
+            <div className="modal-section">
+              <span className="eyebrow">PAYMENT</span>
+              <div className="modal-payment-row">
+                <div>
+                  <strong>₦{Number(selectedOrder.total_amount).toLocaleString()}</strong>
+                  <p>{selectedOrder.payment_status === "paid" ? "Payment has been recorded." : "Payment is still outstanding."}</p>
+                </div>
+                <span className={`payment-badge ${selectedOrder.payment_status === "paid" ? "paid" : "unpaid"}`}>
+                  {selectedOrder.payment_status === "paid" ? "Paid" : "Unpaid"}
+                </span>
+              </div>
+              {selectedOrder.payment_status !== "paid" && selectedOrder.status === "served" && (
+                <button className="secondary-button full" type="button" onClick={recordPayment} disabled={saving}>
+                  {saving ? "Recording..." : "Record Payment"}
+                </button>
+              )}
+            </div>
+
             <label htmlFor="chef-select">Chef</label>
             <select id="chef-select" value={chefId} onChange={(event) => setChefId(event.target.value)}>
-              <option value="">Select chef</option>
-              {chefs.map((chef) => (
-                <option key={chef.id} value={chef.id}>{chef.name}</option>
-              ))}
+              <option value="">No chef assigned</option>
+              {chefs.map((chef) => <option key={chef.id} value={chef.id}>{chef.name}</option>)}
             </select>
 
             <label htmlFor="bartender-select">Bartender</label>
             <select id="bartender-select" value={bartenderId} onChange={(event) => setBartenderId(event.target.value)}>
-              <option value="">Select bartender</option>
-              {bartenders.map((bartender) => (
-                <option key={bartender.id} value={bartender.id}>{bartender.name}</option>
-              ))}
+              <option value="">No bartender assigned</option>
+              {bartenders.map((bartender) => <option key={bartender.id} value={bartender.id}>{bartender.name}</option>)}
             </select>
 
             <div className="modal-total">
@@ -1490,23 +1278,14 @@ function Waiter() {
               <button className="secondary-button" type="button" onClick={saveAssignments} disabled={saving}>
                 {saving ? "Saving..." : "Save Assignment"}
               </button>
-
               {selectedOrder.status === "pending" && (
-                <button className="primary-button" type="button" onClick={() => updateOrderStatus("preparing")} disabled={saving}>
-                  Start Preparing
-                </button>
+                <button className="primary-button" type="button" onClick={() => updateOrderStatus("preparing")} disabled={saving}>Start Preparing</button>
               )}
-
               {selectedOrder.status === "preparing" && (
-                <button className="primary-button" type="button" onClick={() => updateOrderStatus("served")} disabled={saving}>
-                  Mark as Served
-                </button>
+                <button className="primary-button" type="button" onClick={() => updateOrderStatus("served")} disabled={saving}>Mark as Served</button>
               )}
-
               {selectedOrder.status === "served" && (
-                <button className="secondary-button" type="button" onClick={() => setSelectedOrder(null)} disabled={saving}>
-                  Close
-                </button>
+                <button className="secondary-button" type="button" onClick={() => setSelectedOrder(null)} disabled={saving}>Close</button>
               )}
             </div>
           </div>
