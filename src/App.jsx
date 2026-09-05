@@ -504,7 +504,93 @@ function Customer() {
           />
         </aside>
       </div>
+
        {showTablePopup && (
+  <div
+    style={{
+      position: "fixed",
+      inset: 0,
+      backgroundColor: "rgba(0, 0, 0, 0.65)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      zIndex: 99999,
+      padding: "20px",
+    }}
+  >
+    <div
+      style={{
+        width: "100%",
+        maxWidth: "420px",
+        backgroundColor: "#fffaf2",
+        borderRadius: "20px",
+        padding: "35px 30px",
+        textAlign: "center",
+        boxShadow: "0 25px 70px rgba(0, 0, 0, 0.35)",
+        border: "2px solid #dca63b",
+      }}
+    >
+      <div
+        style={{
+          fontSize: "45px",
+          marginBottom: "15px",
+        }}
+      >
+        🍽️
+      </div>
+
+      <h2
+        style={{
+          margin: "0 0 12px",
+          color: "#321b0f",
+          fontSize: "25px",
+        }}
+      >
+        Table Number Required
+      </h2>
+
+      <p
+        style={{
+          color: "#725f50",
+          fontSize: "16px",
+          lineHeight: "1.6",
+          marginBottom: "25px",
+        }}
+      >
+        Please select your table number before placing your order.
+      </p>
+
+      <button
+        type="button"
+        onClick={() => {
+          setShowTablePopup(false);
+
+          setTimeout(() => {
+            document
+              .getElementById("tableNumber")
+              ?.scrollIntoView({
+                behavior: "smooth",
+                block: "center",
+              });
+          }, 100);
+        }}
+        style={{
+          width: "100%",
+          padding: "14px",
+          border: "none",
+          borderRadius: "10px",
+          backgroundColor: "#dca63b",
+          color: "#261507",
+          fontSize: "16px",
+          fontWeight: "700",
+          cursor: "pointer",
+        }}
+      >
+        Select Table
+      </button>
+    </div>
+  </div>
+)}
         <div
           className="table-popup-overlay"
           onClick={() => setShowTablePopup(false)}
