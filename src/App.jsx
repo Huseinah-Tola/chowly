@@ -642,7 +642,7 @@ function getMenuImage(item) {
 
   if (name.includes("coke") || name.includes("coca")) return MENU_IMAGES.coke;
   if (name.includes("sprite")) return DRINK_IMAGES.sprite;
-  if (name.includes("fanta")) return DRINK_IMAGES.fanta;
+  if (name.includes("fanta")) return fantaImage;
   if (name.includes("7up") || name.includes("7 up") || name.includes("seven up")) return DRINK_IMAGES.sevenUp;
   if (name.includes("chapman")) return DRINK_IMAGES.chapman;
   if (name.includes("milkshake") || name.includes("milk shake")) return DRINK_IMAGES.milkshake;
