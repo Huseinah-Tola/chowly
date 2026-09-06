@@ -414,8 +414,8 @@ function Customer() {
           </div>
 
           <div className="menu-list">
-            <MenuSection title="Food" items={food} addToCart={addToCart} showAll={showAllFood} onToggle={() => setShowAllFood((value) => !value)} />
-            <MenuSection title="Drinks" items={drinks} addToCart={addToCart} showAll={showAllDrinks} onToggle={() => setShowAllDrinks((value) => !value)} />
+            <MenuSection title="Food" items={food} addToCart={addToCart} menu={menu} showAll={showAllFood} onToggle={() => setShowAllFood((value) => !value)} />
+            <MenuSection title="Drinks" items={drinks} addToCart={addToCart} menu={menu} showAll={showAllDrinks} onToggle={() => setShowAllDrinks((value) => !value)} />
           </div>
         </div>
 
@@ -671,7 +671,7 @@ function categoryFallbackImage(item) {
   return category === "drink" ? MENU_IMAGES.water : MENU_IMAGES.jollof;
 }
 
-function MenuSection({ title, items, addToCart, showAll, onToggle }) {
+function MenuSection({ title, items, addToCart, showAll, onToggle, menu }) {
   const isFood = title.toLowerCase() === "food";
   const initialCount = isFood ? 4 : 5;
   const visibleItems = showAll ? items : items.slice(0, initialCount);
@@ -719,7 +719,19 @@ function MenuSection({ title, items, addToCart, showAll, onToggle }) {
 
                 <div className="menu-card-body">
                   <div className="menu-card-copy">
-                    <h3>{item.name}</h3>
+                    <div className="menu-name-row">
+
+  <h3>{item.name}</h3>
+
+  {["jollof", "shawarma", "burger"].some((word) =>
+    item.name.toLowerCase().includes(word)
+  ) && (
+    <span className="popular-badge">
+      ★ Popular
+    </span>
+  )}
+
+</div>
                     <p className="prep-time">{Number(item.preparation_time) || 0} min preparation</p>
                   </div>
 
@@ -735,6 +747,31 @@ function MenuSection({ title, items, addToCart, showAll, onToggle }) {
                       Add <span>+</span>
                     </button>
                   </div>
+                  {isFood && (
+  <div className="menu-recommendation">
+    <span>Complete your meal</span>
+
+    <button
+      type="button"
+      onClick={() => {
+        const drink = menu.find(
+          (menuItem) =>
+            menuItem.category === "Drink" &&
+            (
+              menuItem.name.toLowerCase().includes("chapman") ||
+              menuItem.name.toLowerCase().includes("juice")
+            )
+        );
+
+        if (drink) {
+          addToCart(drink);
+        }
+      }}
+    >
+      + Add a drink
+    </button>
+  </div>
+)}
                 </div>
               </article>
             );
@@ -861,6 +898,54 @@ function CustomerOrder({
   const [savingFeedback, setSavingFeedback] = useState(false);
   const [savingPayment, setSavingPayment] = useState(false);
   const [message, setMessage] = useState("");
+  const [statusMessage, setStatusMessage] = useState("");
+  const [currentTime, setCurrentTime] = useState(Date.now());
+
+  useEffect(() => {
+  const timer = setInterval(() => {
+    setCurrentTime(Date.now());
+  }, 60000);
+
+  return () => clearInterval(timer);
+}, []);
+  const elapsedMinutes = order
+  ? Math.floor(
+      (currentTime - new Date(order.created_at).getTime()) / 60000
+    )
+  : 0;
+
+const delayMinutes = order
+  ? Math.max(
+      0,
+      elapsedMinutes - Number(order.waiting_time || 0)
+    )
+  : 0;
+
+const delayMessage =
+  order?.status === "served"
+    ? "Your order has been served."
+    : delayMinutes > 0
+    ? `Your order is running ${delayMinutes} minute${
+          delayMinutes === 1 ? "" : "s"
+        } late.`
+      : elapsedMinutes >=
+        Math.max(1, Number(order?.waiting_time || 0) - 5)
+        ? "Your order should be ready soon."
+        : "Your order is on schedule.";
+
+  useEffect(() => {
+  if (order.status === "pending") {
+    setStatusMessage("Your order has been received by the restaurant.");
+  }
+
+  if (order.status === "preparing") {
+    setStatusMessage("Your order is now being prepared.");
+  }
+
+  if (order.status === "served") {
+    setStatusMessage("Your order is ready. Enjoy your meal!");
+  }
+}, [order.status]);
 
   useEffect(() => {
     setComplaint(order.complaint || "");
@@ -917,6 +1002,8 @@ function CustomerOrder({
 
     setMessage("Demo payment recorded successfully.");
     await reloadOrder();
+
+    
   }
 
   const statusLabel = {
@@ -935,6 +1022,29 @@ function CustomerOrder({
         </div>
 
         {message && <div className="message">{message}</div>}
+        {statusMessage && (
+  <div className={`status-notification ${order.status}`}>
+    <span>
+      {order.status === "served"
+        ? "✓"
+        : order.status === "preparing"
+        ? "◷"
+        : "✓"}
+    </span>
+
+    <div>
+      <strong>
+        {order.status === "served"
+          ? "Order ready"
+          : order.status === "preparing"
+          ? "Order in preparation"
+          : "Order received"}
+      </strong>
+
+      <p>{statusMessage}</p>
+    </div>
+  </div>
+)}
 
         <div className="order-success">
           <span className="success-icon">✓</span>
@@ -964,6 +1074,21 @@ function CustomerOrder({
               <span>3</span>Served
             </div>
           </div>
+          <div className={`delay-status ${delayMinutes > 0 ? "delayed" : ""}`}>
+  <span className="delay-status-icon">
+    {delayMinutes > 0 ? "⚠️" : "✓"}
+  </span>
+
+  <div>
+    <strong>{delayMessage}</strong>
+
+    {delayMinutes > 0 && (
+      <p>
+        We apologise for the delay. Thank you for your patience.
+      </p>
+    )}
+  </div>
+</div>
         </div>
 
         <div className="order-details">
@@ -983,7 +1108,41 @@ function CustomerOrder({
 
           <div className="card">
             <span className="eyebrow">ESTIMATED WAIT</span>
-            <div className="waiting-time">{order.waiting_time}<span>min</span></div>
+            <div className="waiting-experience">
+
+  <div className="waiting-number">
+    <span className="eyebrow">ESTIMATED WAIT</span>
+
+    <div className="waiting-time">
+      {order.waiting_time}
+      <span>min</span>
+    </div>
+  </div>
+
+  <div className="waiting-message">
+    {order.status === "pending" && (
+      <>
+        <strong>Your order has been received.</strong>
+        <p>The restaurant is getting everything ready.</p>
+      </>
+    )}
+
+    {order.status === "preparing" && (
+      <>
+        <strong>Your order is being prepared.</strong>
+        <p>Our kitchen and bar are working on your order.</p>
+      </>
+    )}
+
+    {order.status === "served" && (
+      <>
+        <strong>Your order is ready.</strong>
+        <p>Enjoy your meal. Thank you for dining with Chowly.</p>
+      </>
+    )}
+  </div>
+
+</div>
             <div className="waiting-card">
               <span className="waiting-icon">⏱</span>
               <div><strong>Estimated waiting time</strong><p>About {order.waiting_time} minutes</p></div>
@@ -1061,6 +1220,59 @@ function CustomerOrder({
             )}
           </div>
         </div>
+        {order.payment_status === "paid" && (
+  <div className="card receipt-card">
+
+    <div className="receipt-header">
+      <div>
+        <span className="eyebrow">CHOWLY</span>
+        <h3>Payment Receipt</h3>
+      </div>
+
+      <span className="receipt-paid">PAID ✓</span>
+    </div>
+
+    <div className="receipt-meta">
+      <span>Order #{order.id}</span>
+
+      {order.table_number && (
+        <span>Table {order.table_number}</span>
+      )}
+
+      <span>
+        {new Date(order.created_at).toLocaleString()}
+      </span>
+    </div>
+
+    <div className="receipt-items">
+      {order.order_items?.map((item) => (
+        <div className="receipt-line" key={item.id}>
+          <span>
+            {item.quantity} × {item.menu_items?.name}
+          </span>
+
+          <strong>
+            ₦{(
+              Number(item.price) * Number(item.quantity)
+            ).toLocaleString()}
+          </strong>
+        </div>
+      ))}
+    </div>
+
+    <div className="receipt-total">
+      <span>Total paid</span>
+      <strong>
+        ₦{Number(order.total_amount).toLocaleString()}
+      </strong>
+    </div>
+
+    <p className="receipt-thank-you">
+      Thank you for dining with Chowly.
+    </p>
+
+  </div>
+)}
       </div>
     </section>
   );
@@ -1204,12 +1416,49 @@ function Waiter() {
   const chefs = staff.filter((person) => String(person.role || "").toLowerCase() === "chef");
   const bartenders = staff.filter((person) => String(person.role || "").toLowerCase() === "bartender");
 
+  const chefWorkload = chefs.map((chef) => ({
+  ...chef,
+  activeOrders: orders.filter(
+    (order) =>
+      Number(order.chef_id) === Number(chef.id) &&
+      order.status !== "served"
+  ).length
+}));
+
+const bartenderWorkload = bartenders.map((bartender) => ({
+  ...bartender,
+  activeOrders: orders.filter(
+    (order) =>
+      Number(order.bartender_id) === Number(bartender.id) &&
+      order.status !== "served"
+  ).length
+}));
+
   const counts = {
-    all: orders.length,
-    pending: orders.filter((order) => order.status === "pending").length,
-    preparing: orders.filter((order) => order.status === "preparing").length,
-    served: orders.filter((order) => order.status === "served").length
-  };
+  all: orders.length,
+  pending: orders.filter((order) => order.status === "pending").length,
+  preparing: orders.filter((order) => order.status === "preparing").length,
+  served: orders.filter((order) => order.status === "served").length
+};
+
+const totalRevenue = orders
+  .filter((order) => order.payment_status === "paid")
+  .reduce((sum, order) => sum + Number(order.total_amount || 0), 0);
+
+const averageWait =
+  orders.length > 0
+    ? Math.round(
+        orders.reduce(
+          (sum, order) => sum + Number(order.waiting_time || 0),
+          0
+        ) / orders.length
+      )
+    : 0;
+
+const servedPercentage =
+  orders.length > 0
+    ? Math.round((counts.served / orders.length) * 100)
+    : 0;
 
   const visibleOrders = filter === "all" ? orders : orders.filter((order) => order.status === filter);
 
@@ -1229,7 +1478,83 @@ function Waiter() {
       </div>
 
       {message && <div className="message">{message}</div>}
+      <div className="analytics-grid">
 
+  <div className="analytics-card">
+    <span className="analytics-icon">₦</span>
+    <span className="analytics-label">PAID REVENUE</span>
+    <strong>₦{totalRevenue.toLocaleString()}</strong>
+    <small>Recorded payments</small>
+  </div>
+
+  <div className="analytics-card">
+    <span className="analytics-icon">◉</span>
+    <span className="analytics-label">TOTAL ORDERS</span>
+    <strong>{counts.all}</strong>
+    <small>Orders received</small>
+  </div>
+
+  <div className="analytics-card">
+    <span className="analytics-icon">◷</span>
+    <span className="analytics-label">AVG. WAIT</span>
+    <strong>{averageWait} min</strong>
+    <small>Estimated preparation</small>
+  </div>
+
+  <div className="analytics-card">
+    <span className="analytics-icon">✓</span>
+    <span className="analytics-label">SERVED</span>
+    <strong>{servedPercentage}%</strong>
+    <small>Orders completed</small>
+  </div>
+
+    <div className="workload-section">
+
+  <div>
+    <span className="eyebrow">KITCHEN TEAM</span>
+    <h3>Chef Workload</h3>
+
+    <div className="workload-list">
+      {chefWorkload.map((chef) => (
+        <div className="workload-row" key={chef.id}>
+          <div>
+            <strong>{chef.name}</strong>
+            <span>Chef</span>
+          </div>
+
+          <b>
+            {chef.activeOrders}
+            <small> active</small>
+          </b>
+        </div>
+      ))}
+    </div>
+  </div>
+
+  <div>
+    <span className="eyebrow">BAR TEAM</span>
+    <h3>Bartender Workload</h3>
+
+    <div className="workload-list">
+      {bartenderWorkload.map((bartender) => (
+        <div className="workload-row" key={bartender.id}>
+          <div>
+            <strong>{bartender.name}</strong>
+            <span>Bartender</span>
+          </div>
+
+          <b>
+            {bartender.activeOrders}
+            <small> active</small>
+          </b>
+        </div>
+      ))}
+    </div>
+  </div>
+
+</div>
+
+</div>
       <div className="order-filters" role="tablist" aria-label="Order status filters">
         {[['all', 'All'], ['pending', 'Pending'], ['preparing', 'Preparing'], ['served', 'Served']].map(([value, label]) => (
           <button key={value} type="button" className={filter === value ? "active" : ""} onClick={() => setFilter(value)}>
