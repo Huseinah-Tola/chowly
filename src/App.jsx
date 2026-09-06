@@ -26,7 +26,7 @@ import milkshakeImage from "./assets/menu/milkshake.svg";
 // Local SVG assets remain as fallbacks if an external image ever fails.
 const PREMIUM_DRINK_IMAGES = {
   coke: cokePremiumImage,
-  fanta: fantaPremiumImage,
+  fanta: fantaImage,
   sprite: spritePremiumImage,
   chapman: chapmanImage
 };
