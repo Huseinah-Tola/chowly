@@ -243,8 +243,8 @@ function Customer() {
   }
 
   async function placeOrder() {
-    if (tableNumber === "") {
-    setShowTablePopup(true);
+    if (!tableNumber) {
+    alert("TEST: Place Order button is working");
       return;
     }
 
@@ -834,7 +834,7 @@ function Cart({
 
           <button
             className="primary-button full"
-            onClick={placeOrder}
+            onClick={() => alert("BUTTON CLICKED")}
           >
             Place Order
           </button>
