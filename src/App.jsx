@@ -591,45 +591,7 @@ function Customer() {
     </div>
   </div>
 )}
-        <div
-          className="table-popup-overlay"
-          onClick={() => setShowTablePopup(false)}
-        >
-          <div
-            className="table-popup"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="table-popup-icon">
-              🍽️
-            </div>
 
-            <h2>Table Number Required</h2>
-
-            <p>
-              Please select your table number before placing your order.
-            </p>
-
-            <button
-              className="table-popup-button"
-              type="button"
-              onClick={() => {
-                setShowTablePopup(false);
-
-                setTimeout(() => {
-                  document
-                    .getElementById("tableNumber")
-                    ?.scrollIntoView({
-                      behavior: "smooth",
-                      block: "center",
-                    });
-                }, 100);
-              }}
-            >
-              Select Table
-            </button>
-          </div>
-             </div>
-      )}
     </section>
   );
 }
