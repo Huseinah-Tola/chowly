@@ -2693,3 +2693,22 @@ main{min-height:calc(100vh - 76px)}
   }
 
 }
+
+/*waiter page side-bar*/
+.waiter-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 28px;
+  align-items: start;
+}
+
+.waiter-main {
+  min-width: 0;
+}
+
+.waiter-sidebar {
+  position: sticky;
+  top: 24px;
+  align-self: start;
+  height: fit-content;
+}
