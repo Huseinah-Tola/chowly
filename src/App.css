@@ -2760,3 +2760,348 @@ main{min-height:calc(100vh - 76px)}
   background: rgba(90, 60, 40, 0.25);
   border-radius: 999px;
 }
+/* =========================================================
+   CHOWLY FINAL UI POLISH
+   One visual language for Customer + Waiter
+   ========================================================= */
+
+:root {
+  --champagne: #d6aa50;
+  --champagne-light: #f3e8d6;
+  --champagne-dark: #8a6428;
+  --aubergine: #3a2330;
+  --wine: #5a3040;
+  --border: var(--line);
+  --shadow-sm: 0 6px 20px rgba(50,30,17,.055);
+  --text: var(--ink);
+}
+
+.section,
+.waiter-page {
+  color: var(--ink);
+}
+
+.section-eyebrow,
+.eyebrow,
+.cart-kicker {
+  color: var(--champagne-dark);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 2.2px;
+}
+
+.primary-button,
+.secondary-button,
+.add-button,
+.waiter-open-button,
+.table-popup-button {
+  transition: transform .18s ease, box-shadow .18s ease,
+    background .18s ease, border-color .18s ease;
+}
+
+.primary-button,
+.waiter-open-button {
+  background: linear-gradient(135deg, #e2bc62 0%, #bd8729 100%);
+  color: #28170a;
+  border: 0;
+  box-shadow: 0 6px 16px rgba(137,94,24,.14);
+}
+
+.primary-button:hover,
+.waiter-open-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(137,94,24,.18);
+}
+
+.secondary-button {
+  background: #fffaf2;
+  border-color: #d6b36d;
+  color: var(--brown);
+}
+
+.secondary-button:hover {
+  background: #f5e8d1;
+  border-color: var(--gold);
+  transform: translateY(-1px);
+}
+
+.menu-card,
+.order-history,
+.cart,
+.order-status-card,
+.card,
+.payment-card,
+.paid-card,
+.analytics-card,
+.workload-section > div,
+.waiter-panel,
+.waiter-tip,
+.waiter-order-card,
+.order-modal {
+  border-radius: 14px;
+}
+
+.menu-card {
+  box-shadow: 0 7px 22px rgba(50,30,17,.065);
+}
+
+.menu-card:hover {
+  box-shadow: 0 15px 32px rgba(50,30,17,.12);
+}
+
+.hero {
+  border-radius: 16px;
+  box-shadow: 0 16px 38px rgba(50,30,17,.10);
+}
+
+/* WAITER: make it unmistakably part of the same restaurant */
+.waiter-page {
+  max-width: 1320px;
+}
+
+.waiter-hero {
+  border-radius: 16px;
+  box-shadow: 0 16px 38px rgba(36,19,31,.15);
+}
+
+.waiter-hero h2 {
+  font-family: 'Playfair Display', Georgia, serif;
+}
+
+.waiter-layout {
+  grid-template-columns: minmax(0, 1fr) 335px;
+  gap: 24px;
+}
+
+.waiter-main .order-filters,
+.waiter-search {
+  border-radius: 12px;
+  border-color: var(--line);
+  box-shadow: var(--shadow-sm);
+}
+
+.waiter-main .order-filters button.active {
+  background: var(--espresso);
+  border-color: var(--espresso);
+}
+
+.waiter-order-card {
+  background: var(--paper);
+  border-color: var(--line);
+  box-shadow: 0 7px 22px rgba(50,30,17,.065);
+}
+
+.waiter-order-card:hover {
+  border-color: #d6aa51;
+  box-shadow: 0 15px 32px rgba(50,30,17,.11);
+}
+
+.waiter-order-number {
+  color: var(--champagne-dark);
+}
+
+.waiter-order-header h3,
+.waiter-orders-heading h2,
+.waiter-panel-heading h3 {
+  font-family: 'Playfair Display', Georgia, serif;
+}
+
+.status.pending,
+.history-status.pending {
+  background: #eeeae5;
+  color: #625950;
+}
+
+.status.preparing,
+.history-status.preparing {
+  background: #f8e6bb;
+  color: #76500c;
+}
+
+.status.served,
+.history-status.served {
+  background: #dff1dc;
+  color: #26702e;
+}
+
+/* Independent waiter sidebar */
+.waiter-sidebar {
+  position: sticky;
+  top: 24px;
+  align-self: start;
+  height: calc(100vh - 48px);
+  overflow-y: auto;
+  padding-right: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(90,60,40,.28) transparent;
+}
+
+.waiter-sidebar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.waiter-sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.waiter-sidebar::-webkit-scrollbar-thumb {
+  background: rgba(90,60,40,.25);
+  border-radius: 999px;
+}
+
+.waiter-sidebar::-webkit-scrollbar-thumb:hover {
+  background: rgba(90,60,40,.45);
+}
+
+.waiter-panel,
+.waiter-tip {
+  background: var(--paper);
+  border-color: var(--line);
+  box-shadow: var(--shadow-sm);
+}
+
+.panel-icon,
+.overview-icon,
+.staff-member-icon {
+  background: var(--champagne-light);
+  color: var(--champagne-dark);
+}
+
+.overview-card,
+.staff-member {
+  background: #fffdf9;
+  border-color: #eee3d5;
+}
+
+.staff-progress span {
+  background: var(--gold);
+}
+
+.staff-member > b {
+  background: #f5e3bb;
+  color: #654517;
+}
+
+.waiter-tip {
+  border-radius: 12px;
+}
+
+.tip-icon {
+  background: #fff3d7;
+  color: var(--champagne-dark);
+}
+
+/* Analytics/workload use the same cream + gold language */
+.analytics-card {
+  background: linear-gradient(145deg, #ffffff, #fbf7ef);
+  border-color: var(--line);
+  box-shadow: var(--shadow-sm);
+}
+
+.analytics-icon {
+  background: var(--champagne-light);
+  color: var(--champagne-dark);
+}
+
+.analytics-card strong {
+  color: var(--aubergine);
+}
+
+.workload-section > div {
+  border-color: var(--line);
+  box-shadow: var(--shadow-sm);
+}
+
+.workload-row {
+  background: var(--champagne-light);
+}
+
+.workload-row strong {
+  color: var(--aubergine);
+}
+
+.workload-row b {
+  color: var(--champagne-dark);
+}
+
+.popular-badge,
+.menu-recommendation button {
+  color: var(--champagne-dark);
+}
+
+.popular-badge {
+  background: var(--champagne-light);
+}
+
+.receipt-card {
+  border-radius: 14px;
+  border-color: rgba(181,145,86,.35);
+}
+
+.receipt-header h3,
+.receipt-total strong {
+  color: var(--aubergine);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--gold) !important;
+  box-shadow: 0 0 0 3px rgba(201,154,59,.10);
+}
+
+.order-modal {
+  border-color: #d3bc8c;
+  box-shadow: 0 30px 80px rgba(25,14,8,.26);
+}
+
+.customer-layout,
+.waiter-layout {
+  margin-top: 22px;
+}
+
+/* Responsive */
+@media (max-width: 1150px) {
+  .waiter-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .waiter-sidebar {
+    position: static;
+    height: auto;
+    overflow: visible;
+    padding-right: 0;
+  }
+}
+
+@media (max-width: 850px) {
+  .customer-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .waiter-sidebar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+}
+
+@media (max-width: 650px) {
+  .waiter-sidebar {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .hero,
+  .waiter-hero {
+    border-radius: 14px;
+  }
+
+  .menu-card,
+  .waiter-order-card,
+  .waiter-panel,
+  .order-history,
+  .cart {
+    border-radius: 12px;
+  }
+}
