@@ -1269,6 +1269,7 @@ function Waiter() {
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
   const [filter, setFilter] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     loadData();
@@ -1436,169 +1437,785 @@ const servedPercentage =
     ? Math.round((counts.served / orders.length) * 100)
     : 0;
 
-  const visibleOrders = filter === "all" ? orders : orders.filter((order) => order.status === filter);
+  const visibleOrders = orders.filter((order) => {
+  const matchesFilter =
+    filter === "all" || order.status === filter;
 
-  if (loading) {
-    return <section className="section"><div className="loading">Loading waiter dashboard...</div></section>;
-  }
+  const search = searchTerm.toLowerCase().trim();
 
-  return (
-    <section className="section">
-      <div className="dashboard-header">
-        <div>
-          <span className="eyebrow">STAFF DASHBOARD</span>
-          <h2>Active Orders</h2>
-          <p>Manage and track all customer orders in real time.</p>
-        </div>
-        <div className="dashboard-stat"><strong>{orders.length}</strong><span>Total Orders</span></div>
+  const matchesSearch =
+    !search ||
+    String(order.id).includes(search) ||
+    String(order.table_number || "").includes(search) ||
+    order.order_items?.some((item) =>
+      String(item.menu_items?.name || "")
+        .toLowerCase()
+        .includes(search)
+    );
+
+  return matchesFilter && matchesSearch;
+});
+
+    return (
+  <section className="section waiter-page">
+
+    {/* =====================================
+        WAITER HERO
+    ====================================== */}
+
+    <div
+      className="waiter-hero"
+      style={{
+        backgroundImage: `
+          linear-gradient(
+            90deg,
+            rgba(38, 20, 11, 0.97) 0%,
+            rgba(38, 20, 11, 0.88) 45%,
+            rgba(38, 20, 11, 0.45) 72%,
+            rgba(38, 20, 11, 0.18) 100%
+          ),
+          url(${heroImage})
+        `
+      }}
+    >
+
+      <div className="waiter-hero-content">
+
+        <span className="eyebrow">
+          STAFF DASHBOARD
+        </span>
+
+        <h2>
+          Active Orders
+        </h2>
+
+        <p>
+          Manage and track all customer orders in real time.
+        </p>
+
       </div>
 
-      {message && <div className="message">{message}</div>}
-      <div className="analytics-grid">
+      <div className="waiter-hero-stat">
 
-  <div className="analytics-card">
-    <span className="analytics-icon">₦</span>
-    <span className="analytics-label">PAID REVENUE</span>
-    <strong>₦{totalRevenue.toLocaleString()}</strong>
-    <small>Recorded payments</small>
-  </div>
+        <strong>
+          {orders.length}
+        </strong>
 
-  <div className="analytics-card">
-    <span className="analytics-icon">◉</span>
-    <span className="analytics-label">TOTAL ORDERS</span>
-    <strong>{counts.all}</strong>
-    <small>Orders received</small>
-  </div>
+        <span>
+          Total Orders
+        </span>
 
-  <div className="analytics-card">
-    <span className="analytics-icon">◷</span>
-    <span className="analytics-label">AVG. WAIT</span>
-    <strong>{averageWait} min</strong>
-    <small>Estimated preparation</small>
-  </div>
-
-  <div className="analytics-card">
-    <span className="analytics-icon">✓</span>
-    <span className="analytics-label">SERVED</span>
-    <strong>{servedPercentage}%</strong>
-    <small>Orders completed</small>
-  </div>
-
-    <div className="workload-section">
-
-  <div>
-    <span className="eyebrow">KITCHEN TEAM</span>
-    <h3>Chef Workload</h3>
-
-    <div className="workload-list">
-      {chefWorkload.map((chef) => (
-        <div className="workload-row" key={chef.id}>
-          <div>
-            <strong>{chef.name}</strong>
-            <span>Chef</span>
-          </div>
-
-          <b>
-            {chef.activeOrders}
-            <small> active</small>
-          </b>
-        </div>
-      ))}
-    </div>
-  </div>
-
-  <div>
-    <span className="eyebrow">BAR TEAM</span>
-    <h3>Bartender Workload</h3>
-
-    <div className="workload-list">
-      {bartenderWorkload.map((bartender) => (
-        <div className="workload-row" key={bartender.id}>
-          <div>
-            <strong>{bartender.name}</strong>
-            <span>Bartender</span>
-          </div>
-
-          <b>
-            {bartender.activeOrders}
-            <small> active</small>
-          </b>
-        </div>
-      ))}
-    </div>
-  </div>
-
-</div>
-
-</div>
-      <div className="order-filters" role="tablist" aria-label="Order status filters">
-        {[['all', 'All'], ['pending', 'Pending'], ['preparing', 'Preparing'], ['served', 'Served']].map(([value, label]) => (
-          <button key={value} type="button" className={filter === value ? "active" : ""} onClick={() => setFilter(value)}>
-            {label} <span>({counts[value]})</span>
-          </button>
-        ))}
       </div>
 
-      <div className="orders-list">
-        {visibleOrders.length === 0 ? (
-          <div className="empty-dashboard">
-            <h3>No {filter === "all" ? "orders" : `${filter} orders`} found</h3>
-            <p>New customer orders will appear here automatically.</p>
+    </div>
+
+
+    {message && (
+      <div className="message">
+        {message}
+      </div>
+    )}
+
+
+    {/* =====================================
+        MAIN CONTENT
+    ====================================== */}
+
+    <div className="waiter-layout">
+
+
+      {/* ===================================
+          LEFT — ORDERS
+      ==================================== */}
+
+      <main className="waiter-main">
+
+
+        {/* FILTER + SEARCH */}
+
+        <div className="waiter-toolbar">
+
+          <div
+            className="order-filters"
+            role="tablist"
+            aria-label="Order status filters"
+          >
+
+            {[
+              ["all", "All"],
+              ["pending", "Pending"],
+              ["preparing", "Preparing"],
+              ["served", "Served"]
+            ].map(([value, label]) => (
+
+              <button
+                key={value}
+                type="button"
+                className={
+                  filter === value
+                    ? "active"
+                    : ""
+                }
+                onClick={() =>
+                  setFilter(value)
+                }
+              >
+                {label}
+
+                <span>
+                  ({counts[value]})
+                </span>
+
+              </button>
+
+            ))}
+
           </div>
-        ) : visibleOrders.map((order) => (
-          <article className="order-card" key={order.id}>
-            <div className="order-card-top">
-              <div>
-                <span className="eyebrow">ORDER #{order.id}</span>
-                <h3>{order.table_number ? `Table ${order.table_number}` : "Table not selected"}</h3>
-                <p className="order-date">{new Date(order.created_at).toLocaleString()}</p>
-              </div>
-              <span className={`status ${order.status}`}>{order.status}</span>
+
+
+          <div className="waiter-search">
+
+            <span>
+              ⌕
+            </span>
+
+            <input
+              type="text"
+              placeholder="Search orders, table or item..."
+              value={searchTerm}
+              onChange={(event) =>
+                setSearchTerm(event.target.value)
+              }
+            />
+
+          </div>
+
+        </div>
+
+
+        {/* SECTION TITLE */}
+
+        <div className="waiter-orders-heading">
+
+          <div>
+
+            <h2>
+              Orders
+            </h2>
+
+            <p>
+              Live customer orders
+            </p>
+
+          </div>
+
+          <span>
+            {visibleOrders.length}{" "}
+            {visibleOrders.length === 1
+              ? "order"
+              : "orders"}
+          </span>
+
+        </div>
+
+
+        {/* ORDERS */}
+
+        <div className="waiter-orders-grid">
+
+          {visibleOrders.length === 0 ? (
+
+            <div className="empty-dashboard">
+
+              <h3>
+                No{" "}
+                {filter === "all"
+                  ? "orders"
+                  : `${filter} orders`}{" "}
+                found
+              </h3>
+
+              <p>
+                New customer orders will appear here automatically.
+              </p>
+
             </div>
 
-            <div className="order-items">
-              {order.order_items?.map((item) => (
-                <div className="order-item-line" key={item.id}>
-                  <span>{item.quantity} × {item.menu_items?.name || "Menu item"}</span>
-                  <span>₦{(Number(item.price) * Number(item.quantity)).toLocaleString()}</span>
+          ) : (
+
+            visibleOrders.map((order) => (
+
+              <article
+                className="waiter-order-card"
+                key={order.id}
+              >
+
+
+                {/* CARD HEADER */}
+
+                <div className="waiter-order-header">
+
+                  <div>
+
+                    <span className="waiter-order-number">
+                      Order #{order.id}
+                    </span>
+
+                    <h3>
+                      {order.table_number
+                        ? `Table ${order.table_number}`
+                        : "Table not selected"}
+                    </h3>
+
+                    <p>
+                      {new Date(
+                        order.created_at
+                      ).toLocaleString([], {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                        hour: "numeric",
+                        minute: "2-digit"
+                      })}
+                    </p>
+
+                  </div>
+
+
+                  <span
+                    className={`status ${order.status}`}
+                  >
+                    {order.status}
+                  </span>
+
                 </div>
+
+
+                {/* ORDER ITEMS */}
+
+                <div className="waiter-order-items">
+
+                  {order.order_items
+                    ?.slice(0, 3)
+                    .map((item) => (
+
+                      <div
+                        className="waiter-order-item"
+                        key={item.id}
+                      >
+
+                        <img
+                          src={getMenuImage(
+                            item.menu_items
+                          )}
+                          alt={
+                            item.menu_items?.name ||
+                            "Menu item"
+                          }
+                        />
+
+                        <div className="waiter-item-info">
+
+                          <span>
+                            {item.quantity} ×{" "}
+                            {item.menu_items?.name ||
+                              "Menu item"}
+                          </span>
+
+                          <strong>
+                            ₦
+                            {(
+                              Number(item.price) *
+                              Number(item.quantity)
+                            ).toLocaleString()}
+                          </strong>
+
+                        </div>
+
+                      </div>
+
+                    ))}
+
+                </div>
+
+
+                {/* TOTAL */}
+
+                <div className="waiter-total">
+
+                  <span>
+                    Total
+                  </span>
+
+                  <strong>
+                    ₦
+                    {Number(
+                      order.total_amount
+                    ).toLocaleString()}
+                  </strong>
+
+                </div>
+
+
+                {/* STAFF */}
+
+                <div className="waiter-assigned">
+
+                  <div>
+
+                    <span className="staff-icon">
+                      ♟
+                    </span>
+
+                    <span>
+                      Chef:{" "}
+                      <strong>
+                        {order.chef?.name || "—"}
+                      </strong>
+                    </span>
+
+                  </div>
+
+
+                  <div>
+
+                    <span className="staff-icon">
+                      ◇
+                    </span>
+
+                    <span>
+                      Bartender:{" "}
+                      <strong>
+                        {order.bartender?.name || "—"}
+                      </strong>
+                    </span>
+
+                  </div>
+
+                </div>
+
+
+                {/* FEEDBACK */}
+
+                <div className="waiter-card-footer">
+
+                  <div>
+
+                    <span>
+                      Rating
+                    </span>
+
+                    <strong>
+                      {order.rating
+                        ? `${"★".repeat(
+                            Number(order.rating)
+                          )}${"☆".repeat(
+                            5 -
+                              Number(
+                                order.rating
+                              )
+                          )}`
+                        : "Not rated"}
+                    </strong>
+
+                  </div>
+
+
+                  <div>
+
+                    <span>
+                      Payment
+                    </span>
+
+                    <strong
+                      className={
+                        order.payment_status === "paid"
+                          ? "paid"
+                          : "unpaid"
+                      }
+                    >
+                      {order.payment_status === "paid"
+                        ? "Paid"
+                        : "Unpaid"}
+                    </strong>
+
+                  </div>
+
+                </div>
+
+
+                {/* COMPLAINT */}
+
+                {order.complaint && (
+
+                  <div className="waiter-complaint">
+
+                    <span>
+                      Customer feedback
+                    </span>
+
+                    <p>
+                      “{order.complaint}”
+                    </p>
+
+                  </div>
+
+                )}
+
+
+                {/* OPEN */}
+
+                <button
+                  type="button"
+                  className="waiter-open-button"
+                  onClick={() =>
+                    openOrder(order)
+                  }
+                >
+
+                  <span>
+                    ♧
+                  </span>
+
+                  Open Order
+
+                </button>
+
+              </article>
+
+            ))
+
+          )}
+
+        </div>
+
+      </main>
+
+
+      {/* ===================================
+          RIGHT — SIDEBAR
+      ==================================== */}
+
+      <aside className="waiter-sidebar">
+
+
+        {/* OVERVIEW */}
+
+        <section className="waiter-panel">
+
+          <div className="waiter-panel-heading">
+
+            <div className="panel-icon">
+              ◧
+            </div>
+
+            <div>
+
+              <h3>
+                Today's Overview
+              </h3>
+
+              <p>
+                Live performance
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <div className="overview-grid">
+
+
+            <div className="overview-card">
+
+              <span className="overview-icon">
+                ₦
+              </span>
+
+              <strong>
+                ₦
+                {totalRevenue.toLocaleString()}
+              </strong>
+
+              <span>
+                Paid Revenue
+              </span>
+
+              <small>
+                Recorded payments
+              </small>
+
+            </div>
+
+
+            <div className="overview-card">
+
+              <span className="overview-icon">
+                #
+              </span>
+
+              <strong>
+                {counts.all}
+              </strong>
+
+              <span>
+                Total Orders
+              </span>
+
+              <small>
+                Orders received
+              </small>
+
+            </div>
+
+
+            <div className="overview-card">
+
+              <span className="overview-icon">
+                ◷
+              </span>
+
+              <strong>
+                {averageWait} min
+              </strong>
+
+              <span>
+                Avg. Wait Time
+              </span>
+
+              <small>
+                From order to serve
+              </small>
+
+            </div>
+
+
+            <div className="overview-card">
+
+              <span className="overview-icon">
+                ✓
+              </span>
+
+              <strong>
+                {servedPercentage}%
+              </strong>
+
+              <span>
+                Served
+              </span>
+
+              <small>
+                Orders completed
+              </small>
+
+            </div>
+
+          </div>
+
+        </section>
+
+
+        {/* STAFF WORKLOAD */}
+
+        <section className="waiter-panel">
+
+          <div className="waiter-panel-heading">
+
+            <div className="panel-icon">
+              ♙
+            </div>
+
+            <div>
+
+              <h3>
+                Staff Workload
+              </h3>
+
+              <p>
+                Current active orders
+              </p>
+
+            </div>
+
+          </div>
+
+
+          {/* KITCHEN */}
+
+          <div className="staff-team">
+
+            <div className="staff-team-heading">
+
+              <strong>
+                Kitchen Team
+              </strong>
+
+              <span>
+                CHEFS
+              </span>
+
+            </div>
+
+
+            <div className="staff-list">
+
+              {chefWorkload.map((chef) => (
+
+                <div
+                  className="staff-member"
+                  key={chef.id}
+                >
+
+                  <div className="staff-member-icon">
+                    ◷
+                  </div>
+
+                  <div className="staff-member-details">
+
+                    <strong>
+                      {chef.name}
+                    </strong>
+
+                    <span>
+                      Chef
+                    </span>
+
+                    <div className="staff-progress">
+
+                      <span
+                        style={{
+                          width: `${Math.min(
+                            100,
+                            chef.activeOrders * 25
+                          )}%`
+                        }}
+                      />
+
+                    </div>
+
+                  </div>
+
+                  <b>
+                    {chef.activeOrders}{" "}
+                    <small>
+                      active
+                    </small>
+                  </b>
+
+                </div>
+
               ))}
+
             </div>
 
-            <div className="order-total-line">
-              <strong>Total</strong>
-              <strong>₦{Number(order.total_amount).toLocaleString()}</strong>
+          </div>
+
+
+          {/* BAR */}
+
+          <div className="staff-team">
+
+            <div className="staff-team-heading">
+
+              <strong>
+                Bar Team
+              </strong>
+
+              <span>
+                BARTENDERS
+              </span>
+
             </div>
 
-            <div className="assigned-staff">
-              <span>Chef: {order.chef?.name || "—"}</span>
-              <span>Bartender: {order.bartender?.name || "—"}</span>
+
+            <div className="staff-list">
+
+              {bartenderWorkload.map(
+                (bartender) => (
+
+                  <div
+                    className="staff-member"
+                    key={bartender.id}
+                  >
+
+                    <div className="staff-member-icon">
+                      ◷
+                    </div>
+
+                    <div className="staff-member-details">
+
+                      <strong>
+                        {bartender.name}
+                      </strong>
+
+                      <span>
+                        Bartender
+                      </span>
+
+                      <div className="staff-progress">
+
+                        <span
+                          style={{
+                            width: `${Math.min(
+                              100,
+                              bartender.activeOrders * 25
+                            )}%`
+                          }}
+                        />
+
+                      </div>
+
+                    </div>
+
+                    <b>
+                      {bartender.activeOrders}{" "}
+                      <small>
+                        active
+                      </small>
+                    </b>
+
+                  </div>
+
+                )
+              )}
+
             </div>
 
-            <div className="waiter-card-feedback">
-              <div>
-                <span className="feedback-label">Rating</span>
-                <strong>{order.rating ? `${"★".repeat(Number(order.rating))}${"☆".repeat(5 - Number(order.rating))}` : "Not rated"}</strong>
-              </div>
-              <div>
-                <span className="feedback-label">Payment</span>
-                <strong className={order.payment_status === "paid" ? "payment-text paid" : "payment-text unpaid"}>{order.payment_status === "paid" ? "Paid" : "Unpaid"}</strong>
-              </div>
-            </div>
+          </div>
 
-            {order.complaint && (
-              <div className="complaint-preview">
-                <span>Customer feedback</span>
-                <p>“{order.complaint}”</p>
-              </div>
-            )}
+        </section>
 
-            <button type="button" className="add-button waiter-open-button" onClick={() => openOrder(order)}>
-              <span aria-hidden="true">🍴</span> Open Order
-            </button>
-          </article>
-        ))}
-      </div>
+
+        {/* QUICK TIP */}
+
+        <section className="waiter-tip">
+
+          <div className="tip-icon">
+            ♧
+          </div>
+
+          <div>
+
+            <strong>
+              Quick Tip
+            </strong>
+
+            <p>
+              Tap on an order to update its
+              status, assign staff or record
+              payment.
+            </p>
+
+          </div>
+
+        </section>
+
+      </aside>
+
+    </div> 
+
+    
 
       {selectedOrder && (
         <div className="order-modal-overlay" onMouseDown={(event) => {
@@ -1689,5 +2306,4 @@ const servedPercentage =
     </section>
   );
 }
-
 export default App;
