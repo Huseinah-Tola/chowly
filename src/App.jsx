@@ -747,42 +747,7 @@ function MenuSection({ title, items, addToCart, showAll, onToggle, menu }) {
                       Add <span>+</span>
                     </button>
                   </div>
-                  {isFood && (
-  <div className="menu-recommendation">
-    <div>
-      <span>Complete your meal</span>
-      <small>Choose a drink to add to your order</small>
-    </div>
-
-    <div className="drink-recommendation">
-      <select
-        defaultValue=""
-        onChange={(event) => {
-          const drink = menu.find(
-            (item) => String(item.id) === event.target.value
-          );
-
-          if (drink) {
-            addToCart(drink);
-            event.target.value = "";
-          }
-        }}
-      >
-        <option value="" disabled>
-          Choose a drink
-        </option>
-
-        {menu
-          .filter((item) => item.category === "Drink" && item.available)
-          .map((drink) => (
-            <option key={drink.id} value={drink.id}>
-              {drink.name} — ₦{Number(drink.price).toLocaleString()}
-            </option>
-          ))}
-      </select>
-    </div>
-  </div>
-)}
+                  
                 </div>
               </article>
             );
