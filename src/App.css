@@ -2702,13 +2702,25 @@ main{min-height:calc(100vh - 76px)}
   align-items: start;
 }
 
-.waiter-main {
-  min-width: 0;
-}
-
 .waiter-sidebar {
   position: sticky;
   top: 24px;
   align-self: start;
-  height: fit-content;
+
+  height: calc(100vh - 48px);
+  overflow-y: auto;
+
+  padding-right: 6px;
+}
+.waiter-sidebar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.waiter-sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.waiter-sidebar::-webkit-scrollbar-thumb {
+  background: rgba(90, 60, 40, 0.25);
+  border-radius: 999px;
 }
