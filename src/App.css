@@ -139,7 +139,43 @@ main{min-height:calc(100vh - 76px)}
 .empty-menu{padding:30px;text-align:center;border:1px dashed var(--line);border-radius:12px;color:var(--muted);background:#fff}
 
 /* ================= SIDEBAR ================= */
-.order-sidebar{position:sticky;top:16px;display:flex;flex-direction:column;gap:15px}
+.order-sidebar {
+  position: sticky;
+  top: 24px;
+  align-self: start;
+
+  height: calc(100vh - 48px);
+  overflow-y: auto;
+
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+
+  padding-right: 6px;
+}
+/* Independent scrollbar for the customer right panel */
+.order-sidebar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.order-sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.order-sidebar::-webkit-scrollbar-thumb {
+  background: rgba(90, 60, 40, 0.25);
+  border-radius: 999px;
+}
+
+.order-sidebar::-webkit-scrollbar-thumb:hover {
+  background: rgba(90, 60, 40, 0.45);
+}
+.order-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 28px;
+  align-items: start;
+}
 .order-history,.cart{border-radius:14px;box-shadow:var(--shadow)}
 .order-history{background:#fff;border:1px solid var(--line);padding:16px}
 .order-history .section-heading{display:flex;justify-content:space-between;gap:8px}
