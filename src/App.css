@@ -935,3 +935,581 @@ main{min-height:calc(100vh - 76px)}
   border-color: rgba(180, 70, 60, 0.2);
 }
 
+/* =========================================================
+   CHOWLY — WAITER PAGE / CUSTOMER-STYLE LAYOUT
+   ========================================================= */
+
+/* Turn the waiter page into the same visual system as customer */
+.section:has(.dashboard-header) {
+  padding-top: 30px;
+}
+
+/* ---------------------------------------------------------
+   WAITER HERO
+   --------------------------------------------------------- */
+
+.section:has(.dashboard-header) .dashboard-header {
+  min-height: 285px;
+  margin: 0 0 28px;
+  padding: 48px 54px;
+  position: relative;
+  overflow: hidden;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 30px;
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(36,19,31,.98) 0%,
+      rgba(49,26,43,.96) 55%,
+      rgba(49,26,43,.72) 100%
+    );
+
+  border: 1px solid rgba(201,164,93,.3);
+  border-radius: 2px;
+
+  box-shadow:
+    0 25px 65px rgba(36,19,31,.18);
+}
+
+/* Decorative gold line */
+.section:has(.dashboard-header) .dashboard-header::after {
+  content: "";
+  position: absolute;
+  left: 54px;
+  right: 54px;
+  bottom: 25px;
+  height: 1px;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(201,164,93,.65),
+      transparent
+    );
+}
+
+/* Hero text */
+.section:has(.dashboard-header) .dashboard-header > div:first-child {
+  position: relative;
+  z-index: 2;
+}
+
+.section:has(.dashboard-header) .dashboard-header .eyebrow {
+  color: #d5b66d;
+  letter-spacing: 2.5px;
+}
+
+.section:has(.dashboard-header) .dashboard-header h2 {
+  margin: 10px 0 10px;
+
+  color: #fffaf2;
+
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: clamp(42px, 5vw, 64px);
+  font-weight: 600;
+  line-height: .95;
+  letter-spacing: -1px;
+}
+
+.section:has(.dashboard-header) .dashboard-header p {
+  max-width: 520px;
+  margin: 0;
+
+  color: #d7cbd0;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+/* Total order block */
+.section:has(.dashboard-header) .dashboard-stat {
+  position: relative;
+  z-index: 2;
+
+  min-width: 155px;
+  min-height: 155px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  border: 1px solid rgba(201,164,93,.38);
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(201,164,93,.15),
+      rgba(201,164,93,.03) 65%
+    );
+
+  box-shadow:
+    inset 0 0 35px rgba(201,164,93,.05);
+}
+
+.section:has(.dashboard-header) .dashboard-stat strong {
+  color: #ead18e;
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 42px;
+  line-height: 1;
+}
+
+.section:has(.dashboard-header) .dashboard-stat span {
+  margin-top: 8px;
+  color: #d5c5c9;
+  font-size: 8px;
+  letter-spacing: 1.8px;
+}
+
+/* ---------------------------------------------------------
+   MAIN WAITER LAYOUT
+   --------------------------------------------------------- */
+
+/*
+   Put the order area and the information area into
+   a customer-style two-column layout.
+*/
+
+.section:has(.dashboard-header) .order-filters {
+  width: calc(100% - 330px);
+
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 7px;
+
+  margin: 0 0 18px;
+  padding: 8px;
+
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+
+  box-shadow: var(--shadow);
+}
+
+/* Filter buttons */
+.section:has(.dashboard-header) .order-filters button {
+  border: 1px solid transparent;
+  border-radius: 2px;
+
+  padding: 12px 10px;
+
+  background: transparent;
+  color: var(--muted);
+
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+
+  transition: .2s ease;
+}
+
+.section:has(.dashboard-header) .order-filters button:hover {
+  background: #f4ecdf;
+  color: var(--wine);
+}
+
+.section:has(.dashboard-header) .order-filters button.active {
+  background: var(--aubergine);
+  color: #fff;
+  border-color: var(--aubergine);
+}
+
+/* ---------------------------------------------------------
+   ORDER AREA
+   --------------------------------------------------------- */
+
+.section:has(.dashboard-header) .orders-list {
+  width: calc(100% - 330px);
+
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 17px;
+
+  margin: 0;
+}
+
+/* Order card */
+.section:has(.dashboard-header) .order-card {
+  position: relative;
+
+  padding: 20px;
+
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+
+  box-shadow:
+    0 9px 28px rgba(50,30,17,.06);
+
+  transition:
+    transform .25s ease,
+    box-shadow .25s ease,
+    border-color .25s ease;
+}
+
+.section:has(.dashboard-header) .order-card:hover {
+  transform: translateY(-3px);
+
+  border-color: #c9a866;
+
+  box-shadow:
+    0 20px 42px rgba(50,30,17,.11);
+}
+
+/* Gold accent on order cards */
+.section:has(.dashboard-header) .order-card::before {
+  content: "";
+
+  position: absolute;
+  top: 0;
+  left: 20px;
+  right: 20px;
+
+  height: 2px;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      var(--champagne),
+      transparent
+    );
+}
+
+/* Order heading */
+.section:has(.dashboard-header) .order-card h3 {
+  font-size: 23px;
+  margin-top: 5px;
+}
+
+/* Table */
+.section:has(.dashboard-header) .order-table {
+  color: var(--champagne-dark) !important;
+  font-weight: 800;
+}
+
+/* Order items */
+.section:has(.dashboard-header) .order-items {
+  margin: 18px 0;
+  padding: 2px 0;
+}
+
+/* Total */
+.section:has(.dashboard-header) .order-total-line {
+  padding: 13px 0;
+
+  border-top: 1px solid #e9dfd3;
+  border-bottom: 1px solid #e9dfd3;
+}
+
+/* Assigned staff */
+.section:has(.dashboard-header) .assigned-staff {
+  padding: 11px 0;
+  margin: 0;
+
+  border-bottom: 1px solid #eee5db;
+
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+
+  color: #74655a;
+  font-size: 9px;
+}
+
+.section:has(.dashboard-header) .assigned-staff span::first-letter {
+  color: var(--champagne-dark);
+}
+
+/* ---------------------------------------------------------
+   FEEDBACK AREA
+   --------------------------------------------------------- */
+
+.section:has(.dashboard-header) .waiter-card-feedback {
+  margin: 13px 0;
+
+  background: #faf5ed;
+  border: 1px solid #e8ddce;
+  border-radius: 2px;
+}
+
+.section:has(.dashboard-header) .feedback-label {
+  color: #a18f80;
+}
+
+.section:has(.dashboard-header) .waiter-card-feedback strong {
+  color: var(--wine);
+}
+
+/* ---------------------------------------------------------
+   RIGHT-SIDE INFORMATION PANEL
+   --------------------------------------------------------- */
+
+/*
+   We use the analytics/workload sections as the waiter
+   equivalent of the customer's cart/history sidebar.
+*/
+
+.section:has(.dashboard-header) .analytics-grid {
+  position: absolute;
+
+  width: 300px;
+
+  right: max(4.5%, calc((100vw - 1360px) / 2));
+  top: 390px;
+
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+
+  margin: 0;
+}
+
+/* Small luxury statistics */
+.section:has(.dashboard-header) .analytics-card {
+  min-height: 112px;
+
+  padding: 15px;
+
+  border-radius: 2px;
+
+  background: var(--paper);
+  border: 1px solid var(--line);
+
+  box-shadow: 0 8px 25px rgba(50,30,17,.06);
+}
+
+.section:has(.dashboard-header) .analytics-icon {
+  width: 27px;
+  height: 27px;
+
+  font-size: 11px;
+
+  background: #eee2c7;
+}
+
+.section:has(.dashboard-header) .analytics-label {
+  font-size: 7px;
+  letter-spacing: 1.2px;
+}
+
+.section:has(.dashboard-header) .analytics-card strong {
+  font-size: 23px;
+}
+
+/* ---------------------------------------------------------
+   WORKLOAD PANEL
+   --------------------------------------------------------- */
+
+.section:has(.dashboard-header) .workload-section {
+  position: absolute;
+
+  width: 300px;
+
+  right: max(4.5%, calc((100vw - 1360px) / 2));
+  top: 650px;
+
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+
+  margin: 0;
+}
+
+.section:has(.dashboard-header) .workload-section > div {
+  padding: 18px;
+
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+
+  box-shadow:
+    0 8px 25px rgba(50,30,17,.06);
+}
+
+.section:has(.dashboard-header) .workload-section h3 {
+  margin: 4px 0 15px;
+
+  font-size: 20px;
+}
+
+.section:has(.dashboard-header) .workload-row {
+  padding: 10px 12px;
+}
+
+/* ---------------------------------------------------------
+   MAKE SPACE FOR SIDEBAR
+   --------------------------------------------------------- */
+
+.section:has(.dashboard-header) {
+  position: relative;
+  padding-right: 0;
+}
+
+.section:has(.dashboard-header) .message {
+  width: calc(100% - 330px);
+}
+
+/* ---------------------------------------------------------
+   EMPTY STATE
+   --------------------------------------------------------- */
+
+.section:has(.dashboard-header) .empty-dashboard {
+  width: 100%;
+
+  min-height: 250px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  background: var(--paper);
+  border: 1px dashed #d7c8b7;
+  border-radius: 2px;
+}
+
+.section:has(.dashboard-header) .empty-dashboard h3 {
+  margin: 0 0 6px;
+
+  font-family: "Playfair Display", Georgia, serif;
+  color: var(--aubergine);
+  font-size: 23px;
+}
+
+/* ---------------------------------------------------------
+   ORDER MODAL — SAME LUXURY LANGUAGE
+   --------------------------------------------------------- */
+
+.order-modal {
+  border-radius: 2px;
+  border-color: #d3bc8c;
+}
+
+.order-modal h2 {
+  font-size: 32px;
+}
+
+.order-modal-actions button {
+  min-height: 42px;
+}
+
+/* ---------------------------------------------------------
+   TABLET
+   --------------------------------------------------------- */
+
+@media(max-width:1150px) {
+
+  .section:has(.dashboard-header) .analytics-grid,
+  .section:has(.dashboard-header) .workload-section {
+    position: static;
+    width: 100%;
+  }
+
+  .section:has(.dashboard-header) .analytics-grid {
+    grid-template-columns: repeat(4, 1fr);
+    margin: 20px 0;
+  }
+
+  .section:has(.dashboard-header) .workload-section {
+    grid-template-columns: 1fr 1fr;
+    margin: 20px 0;
+  }
+
+  .section:has(.dashboard-header) .order-filters,
+  .section:has(.dashboard-header) .orders-list,
+  .section:has(.dashboard-header) .message {
+    width: 100%;
+  }
+}
+
+/* ---------------------------------------------------------
+   MOBILE
+   --------------------------------------------------------- */
+
+@media(max-width:700px) {
+
+  .section:has(.dashboard-header) .dashboard-header {
+    min-height: 280px;
+
+    padding: 35px 25px;
+
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .section:has(.dashboard-header) .dashboard-header h2 {
+    font-size: 43px;
+  }
+
+  .section:has(.dashboard-header) .dashboard-stat {
+    position: absolute;
+
+    width: 90px;
+    height: 90px;
+    min-width: 90px;
+    min-height: 90px;
+
+    right: 22px;
+    top: 25px;
+  }
+
+  .section:has(.dashboard-header) .dashboard-stat strong {
+    font-size: 25px;
+  }
+
+  .section:has(.dashboard-header) .dashboard-stat span {
+    font-size: 6px;
+  }
+
+  .section:has(.dashboard-header) .dashboard-header::after {
+    left: 25px;
+    right: 25px;
+  }
+
+  .section:has(.dashboard-header) .order-filters {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .section:has(.dashboard-header) .orders-list {
+    grid-template-columns: 1fr;
+  }
+
+  .section:has(.dashboard-header) .analytics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .section:has(.dashboard-header) .workload-section {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media(max-width:430px) {
+
+  .section:has(.dashboard-header) .dashboard-header {
+    min-height: 300px;
+  }
+
+  .section:has(.dashboard-header) .dashboard-header h2 {
+    font-size: 37px;
+    max-width: 230px;
+  }
+
+  .section:has(.dashboard-header) .dashboard-stat {
+    width: 76px;
+    height: 76px;
+    min-width: 76px;
+    min-height: 76px;
+  }
+
+  .section:has(.dashboard-header) .analytics-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
